@@ -6,12 +6,25 @@
   <style>
     html {
       scroll-behavior: smooth;
+  max-width: 100vw;
+  overflow-x: hidden;
     }
 
     body {
-      margin: 0;
-      background-color: white;
-      font-family: Arial, sans-serif;
+      html {
+  scroll-behavior: smooth;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background-color: white;
+  font-family: Arial, sans-serif;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+// ...existing code...
     }
 
     nav {
@@ -86,10 +99,11 @@
     }
 
     .cover-photo {
-      width: 100%;
-      height: 450px;
-      object-fit: cover;
-      display: block;
+       width: 100vw;
+       max-width: 100vw;
+  min-width: 0;
+  display: block;
+      
     }
 
     .border-wrapper {
