@@ -175,12 +175,50 @@
             <h1>User Sign up</h1>
             
             <div class="input-box">
-                <input type="text" placeholder="Username" required>
+                <input type="text" placeholder="Full Name" required>
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
                     <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
                     <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
                 </svg>
             </div>
+
+            <div class="input-box">
+                    <input type="text" placeholder="Email" required>
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
+                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
+                    <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
+                </svg>
+            </div>
+
+            <div class="input-box">
+                    <input type="text" placeholder="NIC" required>
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
+                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
+                    <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
+                </svg>
+            </div>
+
+                <div class="input-box">
+            <input type="text" placeholder="Address Line 1" required>
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
+             <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
+              <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
+            </svg>
+</div>
+<div class="input-box">
+    <input type="text" placeholder="Address Line 2">
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
+        <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
+        <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
+    </svg>
+</div>
+<div class="input-box">
+    <input type="tel" placeholder="contact number">
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
+        <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
+        <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
+    </svg>
+</div>
             
             <div class="input-box">
                 <input type="password" placeholder="Password" required>

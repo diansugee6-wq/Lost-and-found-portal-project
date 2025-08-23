@@ -11,20 +11,9 @@
     }
 
     body {
-      html {
-  scroll-behavior: smooth;
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  margin: 0;
-  background-color: white;
-  font-family: Arial, sans-serif;
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-// ...existing code...
+      margin: 0;
+      background-color: white;
+      font-family: Arial, sans-serif;
     }
 
     nav {
