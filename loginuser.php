@@ -1,3 +1,31 @@
+<?php
+require_once 'configure.php';
+session_start();
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    $database = new Database();
+    $db = $database->getConnection();
+
+    $sql = "SELECT * FROM user_details WHERE username = :username";
+    $stmt = $db->prepare($sql);
+    $stmt->bindParam(':username', $username);
+    $stmt->execute();
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user && password_verify($password, $user['password'])) {
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['username'] = $user['username'];
+        echo "<script>alert('Login successful!'); window.location.href='Home.php';</script>";
+        exit();
+    } else {
+        echo "<script>alert('Invalid username or password');</script>";
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -212,11 +240,11 @@
 </nav>
     
     <div class="wrapper">
-        <form action="">
+        <form action="" method="post">
             <h1>User Login</h1>
             
             <div class="input-box">
-                <input type="text" placeholder="Username" required>
+                <input type="text" name="username" placeholder="Username" required>
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
                     <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
                     <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>

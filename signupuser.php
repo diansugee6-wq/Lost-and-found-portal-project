@@ -1,3 +1,56 @@
+<?php
+require_once 'configure.php';
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Get form data
+    $full_name = $_POST['first_name'] . ' ' . $_POST['last_name'];
+    $username = $_POST['username'];
+    $email = $_POST['email'];
+    $nic = $_POST['nic'];
+    $address_line1 = $_POST['address_line1'];
+    $address_line2 = $_POST['address_line2'];
+    $contact_number = $_POST['contact_number'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+
+    // Simple password match check
+    if ($password !== $confirm_password) {
+        echo "<script>alert('Passwords do not match');</script>";
+    } else {
+        // Hash the password
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+        // Connect to DB
+        $database = new Database();
+        $db = $database->getConnection();
+
+        // Prepare SQL
+        $sql = "INSERT INTO user_details (full_name, username, email, nic, address_line1, address_line2, contact_number, password) 
+                VALUES (:full_name, :username, :email, :nic, :address_line1, :address_line2, :contact_number, :password)";
+        $stmt = $db->prepare($sql);
+
+        // Bind parameters
+        $stmt->bindParam(':full_name', $full_name);
+        $stmt->bindParam(':username', $username);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':nic', $nic);
+        $stmt->bindParam(':address_line1', $address_line1);
+        $stmt->bindParam(':address_line2', $address_line2);
+        $stmt->bindParam(':contact_number', $contact_number);
+        $stmt->bindParam(':password', $hashed_password);
+
+        // Execute
+        if ($stmt->execute()) {
+            echo "<script>alert('Sign up successful!');</script>";
+        } else {
+            echo "<script>alert('Sign up failed. Try again.');</script>";
+        }
+    }
+}
+?>
+
+
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -36,9 +89,10 @@
         border: 2px solid rgba(255, 255, 255, 0.2);
         backdrop-filter: blur(20px);
         color: #fff;
-        padding: 30px 40px;
+        padding: 20px 40px;
         border-radius: 12px;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        margin-top: 100px;
     }
     
     .wrapper h1 {
@@ -103,11 +157,11 @@
         background-color: #ddd;
     }
     
-    nav {
+    nav {   
+            position: fixed;
             display: flex;
             align-items: center;
             justify-content: left;
-            position: absolute;
             top: 0;
             width: 100%;
             
@@ -171,11 +225,11 @@
 </nav>
     
     <div class="wrapper">
-        <form action="">
+        <form action="" method="POST">
             <h1>User Sign up</h1>
             
             <div class="input-box">
-                <input type="text" placeholder="Full Name" required>
+                <input type="text" name="first_name" placeholder="First Name" required>
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
                     <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
                     <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
@@ -183,7 +237,23 @@
             </div>
 
             <div class="input-box">
-                    <input type="text" placeholder="Email" required>
+                <input type="text" name="last_name" placeholder="Last Name" required>
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
+                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
+                    <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
+                </svg>
+            </div>
+
+            <div class="input-box">
+                <input type="text" name="username" placeholder="Username" required>
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
+                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
+                    <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
+                </svg>
+            </div>
+
+            <div class="input-box">
+                    <input type="text" name="email" placeholder="Email" required>
                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
                     <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
                     <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
@@ -191,7 +261,7 @@
             </div>
 
             <div class="input-box">
-                    <input type="text" placeholder="NIC" required>
+                    <input type="text" name="nic" placeholder="NIC" required>
                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
                     <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
                     <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
@@ -199,21 +269,21 @@
             </div>
 
                 <div class="input-box">
-            <input type="text" placeholder="Address Line 1" required>
+            <input type="text" name="address_line1" placeholder="Address Line 1" required>
             <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
              <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
               <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
             </svg>
 </div>
 <div class="input-box">
-    <input type="text" placeholder="Address Line 2">
+    <input type="text" name="address_line2" placeholder="Address Line 2" required>
     <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
         <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
         <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
     </svg>
 </div>
 <div class="input-box">
-    <input type="tel" placeholder="contact number">
+    <input type="tel" name="contact_number" placeholder="Contact Number" required>
     <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" >
         <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
         <path fill-rule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
@@ -221,7 +291,7 @@
 </div>
             
             <div class="input-box">
-                <input type="password" placeholder="Password" required>
+                <input type="password" name="password" placeholder="Password" required>
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" >
                   <rect x="6" y="10" width="12" height="10" rx="2" ry="2" />
                   <path d="M9 10V7a3 3 0 016 0v3" />
@@ -229,7 +299,7 @@
             </div>
             
             <div class="input-box">
-                <input type="password" placeholder="Confirm password" required>
+                <input type="password" name="confirm_password" placeholder="Confirm password" required>
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" >
                   <rect x="6" y="10" width="12" height="10" rx="2" ry="2" />
                   <path d="M9 10V7a3 3 0 016 0v3" />
@@ -242,3 +312,4 @@
     </div>
 </body>
 </html>
+
