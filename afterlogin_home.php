@@ -363,35 +363,23 @@
 <body>
   <nav class="nav">
     <div class="nav-left">
-      <a href="Home.php">
+      <a href="home.php">
         <img src="logo2.png" alt="Company logo" />
       </a>
       <ul>
-        <li><a class="active" href="Home.php">Home</a></li>
-        <li><a href="About.php">About Us</a></li>
+        <li><a class="active" href="home.php">Home</a></li>
+        <li><a href="about.php">About Us</a></li>
         <li><a href="reportitem.php">Report Items</a></li>
         <li><a href="claimmissing.php">Claim Missing</a></li>
         <li><a href="contactus.php">Contact Us</a></li>
       </ul>
     </div>
-    <div class="nav-right">
-      <ul>
-        <li class="dropdown">
-          <a href="javascript:void(0)" class="dropbtn">Login</a>
-          <div class="dropdown-content">
-            <a href="loginuser.php">User</a>
-            <a href="loginadmin.php">Admin</a>
-          </div>
-        </li>
-        <li class="dropdown">
-          <a href="javascript:void(0)" class="dropbtn">Sign Up</a>
-          <div class="dropdown-content">
-            <a href="signupuser.php">User</a>
-            <a href="signupadmin.php">Admin</a>
-          </div>
-        </li>
-      </ul>
-    </div>
+        <div class="nav-right">
+            <ul>
+                <li><a href="home.php">Logout</a>
+                </li>
+</ul>
+</div>
   </nav>
 
   <img src="wtc-l-f.jpg" alt="Cover Photo" class="cover-photo" />
@@ -476,7 +464,7 @@
       <p>📧 <a href="mailto:info@lostandfound.com">info@lostandfound.com</a></p>
       <p>📞 <a href="tel:+94762639287">+94 76 263 9287</a></p>
       <h3>Quick Links</h3>
-      <p>ℹ️ <a href="About.html">About Us</a></p>
+      <p>ℹ️ <a href="about.php">About Us</a></p>
       <p>📋 <a href="#how-it-works">How It Works</a></p>
       <h3>Follow Us On</h3>
       <p><a href="https://facebook.com">🌐 Facebook</a></p>

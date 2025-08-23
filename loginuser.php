@@ -18,12 +18,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($user && password_verify($password, $user['password'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
-        echo "<script>alert('Login successful!'); window.location.href='Home.php';</script>";
+        echo "<script>alert('Login successful!'); window.location.href='afterlogin_home.php';</script>";
         exit();
     } else {
         echo "<script>alert('Invalid username or password');</script>";
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -227,15 +228,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     
     <nav>
-    <a href="Home.html">
+    <a href="Home.php">
         <img src="logo2.png" alt="logo">
     </a>
     <ul>
-        <li><a href="Home.html">Home</a></li>
-        <li><a href="About.html">About Us</a></li>
-        <li><a href="reportitem.html">Report Items</a></li>
-        <li><a href="claimmissing.html">Claim Missing</a></li>
-        <li><a href="contactus.html">Contact Us</a></li>
+        <li><a href="Home.php">Home</a></li>
+        <li><a href="About.php">About Us</a></li>
+        <li><a href="reportitem.php">Report Items</a></li>
+        <li><a href="claimmissing.php">Claim Missing</a></li>
+        <li><a href="contactus.php">Contact Us</a></li>
     </ul>
 </nav>
     
@@ -252,7 +253,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             
             <div class="input-box">
-                <input type="password" placeholder="Password" required>
+                <input type="password" name="password" placeholder="Password" required>
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" >
                   <rect x="6" y="10" width="12" height="10" rx="2" ry="2" />
                   <path d="M9 10V7a3 3 0 016 0v3" />
@@ -267,7 +268,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <button class="btn" type="submit">Login</button> 
             
             <div class="register-link">
-                <p>Don't have an account? <a href="signupuser.html">SignUp</a></p>
+                <p>Don't have an account? <a href="signupuser.php">SignUp</a></p>
             </div>
         </form>
     </div>
