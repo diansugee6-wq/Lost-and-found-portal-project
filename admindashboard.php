@@ -1,9 +1,96 @@
+<?php
+session_start();
+
+// Check if admin is logged in
+if (!isset($_SESSION['admin_logged_in'])) {
+    header("Location: loginadmin.html");
+    exit();
+}
+
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "lostfounddb";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Handle user deletion
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_user'])) {
+    $userId = $conn->real_escape_string($_POST['user_id']);
+    $sql = "DELETE FROM user_details WHERE id = $userId";
+    
+    if ($conn->query($sql)) {
+        $_SESSION['message'] = "User deleted successfully!";
+        header("Location: admindashboard.php");
+        exit();
+    } else {
+        $_SESSION['error'] = "Error deleting user: " . $conn->error;
+    }
+}
+
+// Handle search
+$searchTerm = "";
+$users = [];
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
+    $searchTerm = $conn->real_escape_string($_POST['search']);
+    $sql = "SELECT * FROM user_details WHERE 
+            full_name LIKE '%$searchTerm%' OR 
+            username LIKE '%$searchTerm%' OR 
+            email LIKE '%$searchTerm%' OR 
+            nic LIKE '%$searchTerm%' OR 
+            contact_number LIKE '%$searchTerm%' 
+            ORDER BY created_at DESC";
+} else {
+    $sql = "SELECT * FROM user_details ORDER BY created_at DESC";
+}
+
+$result = $conn->query($sql);
+if ($result && $result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $users[] = $row;
+    }
+}
+
+// Get statistics
+$totalUsers = 0;
+$todayUsers = 0;
+$weekUsers = 0;
+
+$sql = "SELECT COUNT(*) as total FROM user_details";
+$result = $conn->query($sql);
+if ($result) {
+    $totalUsers = $result->fetch_assoc()['total'];
+}
+
+$sql = "SELECT COUNT(*) as today FROM user_details WHERE DATE(created_at) = CURDATE()";
+$result = $conn->query($sql);
+if ($result) {
+    $todayUsers = $result->fetch_assoc()['today'];
+}
+
+$sql = "SELECT COUNT(*) as week FROM user_details WHERE YEARWEEK(created_at) = YEARWEEK(CURDATE())";
+$result = $conn->query($sql);
+if ($result) {
+    $weekUsers = $result->fetch_assoc()['week'];
+}
+
+$conn->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Lost&Found.com</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --yellow: #fbb117;
@@ -17,7 +104,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
@@ -33,7 +120,7 @@
 
         /* Sidebar Navigation */
         .navigation {
-            width: 300px;
+            width: 280px;
             background: var(--yellow);
             border-left: 10px solid var(--yellow);
             overflow: hidden;
@@ -41,6 +128,7 @@
             position: fixed;
             left: 0;
             top: 0;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
 
         .navigation ul {
@@ -55,7 +143,7 @@
         .navigation ul li a {
             display: flex;
             align-items: center;
-            padding: 25px 15px;
+            padding: 20px 15px;
             color: var(--black1);
             text-decoration: none;
             transition: 0.3s;
@@ -74,7 +162,7 @@
         .navigation ul li a .icon {
             min-width: 50px;
             text-align: center;
-            font-size: 18px;
+            font-size: 20px;
         }
 
         .navigation ul li a .title {
@@ -90,6 +178,7 @@
             padding: 30px 15px;
             color: var(--black1);
             text-decoration: none;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
         }
 
         .logo-link .icon img {
@@ -100,7 +189,7 @@
         }
 
         .logo-text {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             text-align: center;
         }
@@ -108,8 +197,8 @@
         /* Main Content */
         .main-content {
             flex: 1;
-            margin-left: 300px;
-            padding: 20px;
+            margin-left: 280px;
+            padding: 25px;
         }
 
         .dashboard-header {
@@ -122,53 +211,90 @@
         }
 
         .dashboard-title {
-            font-size: 28px;
+            font-size: 32px;
             color: var(--black1);
+            font-weight: 700;
+        }
+
+        .user-welcome {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: var(--yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
         }
 
         .search-container {
             display: flex;
             gap: 10px;
+            margin-bottom: 25px;
         }
 
         .search-input {
-            padding: 10px 15px;
+            padding: 12px 18px;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 250px;
+            border-radius: 8px;
+            width: 300px;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         .search-btn {
             background: var(--yellow);
             border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s;
         }
 
         .search-btn:hover {
-            background: #fdd017;
+            background: #f9a602;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         /* Stats Cards */
         .stats-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 25px;
+            margin-bottom: 35px;
         }
 
         .stat-card {
             background: var(--white);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: var(--black1);
         }
 
         .stat-number {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
             color: var(--black1);
             margin-bottom: 10px;
@@ -176,36 +302,64 @@
 
         .stat-label {
             color: #666;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         /* User Table */
         .table-container {
             background: var(--white);
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             margin-bottom: 30px;
             overflow-x: auto;
         }
 
+        .table-header {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--black1);
+        }
+
+        .export-btn {
+            background: var(--yellow);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .user-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 800px;
+            min-width: 1000px;
         }
 
         .user-table th {
             background-color: var(--yellow);
             color: var(--black1);
             text-align: left;
-            padding: 15px;
-            font-weight: bold;
+            padding: 18px;
+            font-weight: 600;
+            font-size: 16px;
         }
 
         .user-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #ddd;
+            padding: 16px 18px;
+            border-bottom: 1px solid #eee;
         }
 
         .user-table tr:hover {
@@ -215,15 +369,20 @@
         .action-btn {
             background: var(--yellow);
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 8px 14px;
+            border-radius: 6px;
             cursor: pointer;
-            margin-right: 5px;
+            margin-right: 8px;
             font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .action-btn:hover {
-            background: #fdd017;
+            background: #f9a602;
+            transform: translateY(-2px);
         }
 
         .delete-btn {
@@ -235,37 +394,15 @@
             background: #ff3333;
         }
 
-        /* Pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 10px;
-        }
-
-        .pagination-btn {
-            padding: 8px 15px;
-            background: var(--yellow);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .pagination-btn.active {
-            background: var(--black1);
-            color: var(--white);
-        }
-
-        .pagination-btn:hover:not(.active) {
-            background: #fdd017;
-        }
-
         /* Message alerts */
         .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            font-weight: bold;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .alert-success {
@@ -281,16 +418,16 @@
         }
 
         /* Responsive Design */
-        @media (max-width: 992px) {
+        @media (max-width: 1100px) {
             .navigation {
-                width: 250px;
+                width: 230px;
             }
             .main-content {
-                margin-left: 250px;
+                margin-left: 230px;
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .container {
                 flex-direction: column;
             }
@@ -313,6 +450,37 @@
             .search-input {
                 width: 100%;
             }
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .logout-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+        }
+
+        .logout-btn:hover {
+            background: #ff3333;
         }
     </style>
 </head>
@@ -324,49 +492,43 @@
                 <span class="icon">
                     <img src="logo2.png" alt="Logo">
                 </span>
-                <span class="logo-text">Lost & Found inc.</span>
+                <span class="logo-text">Lost & Found Admin</span>
             </a>
             <ul>
                 <li>
                     <a href="#" class="active">
-                        <span class="icon">📊</span>
+                        <span class="icon"><i class="fas fa-chart-line"></i></span>
                         <span class="title">Dashboard</span>
                     </a>
                 </li>
                 <li>
                     <a href="#">
-                        <span class="icon">👤</span>
+                        <span class="icon"><i class="fas fa-users"></i></span>
                         <span class="title">User Management</span>
                     </a>
                 </li>
                 <li>
                     <a href="#">
-                        <span class="icon">📝</span>
+                        <span class="icon"><i class="fas fa-clipboard-list"></i></span>
                         <span class="title">Item Reports</span>
                     </a>
                 </li>
                 <li>
                     <a href="#">
-                        <span class="icon">🔍</span>
+                        <span class="icon"><i class="fas fa-search"></i></span>
                         <span class="title">Item Claims</span>
                     </a>
                 </li>
                 <li>
-                    <a href="settings.html">
-                        <span class="icon">⚙️</span>
+                    <a href="#">
+                        <span class="icon"><i class="fas fa-cog"></i></span>
                         <span class="title">Settings</span>
                     </a>
                 </li>
                 <li>
                     <a href="home.html">
-                        <span class="icon">🏠</span>
+                        <span class="icon"><i class="fas fa-home"></i></span>
                         <span class="title">Back to Home</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="logout.html">
-                        <span class="icon">🚪</span>
-                        <span class="title">Logout</span>
                     </a>
                 </li>
             </ul>
@@ -376,77 +538,69 @@
         <div class="main-content">
             <div class="dashboard-header">
                 <h1 class="dashboard-title">Admin Dashboard</h1>
-                <div class="search-container">
-                    <input type="text" class="search-input" placeholder="Search users..." id="searchInput">
-                    <button class="search-btn" id="searchBtn">Search</button>
+                <div style="display: flex; align-items: center;">
+                    <div class="user-welcome">
+                        <div class="user-avatar">A</div>
+                        <div>Admin User</div>
+                    </div>
+                    <a href="logout.php" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 </div>
             </div>
 
-            <?php
-            // Database connection and data fetching
-            $servername = "localhost";
-            $username = "root"; // Your database username
-            $password = ""; // Your database password
-            $dbname = "lostfounddb"; // Your database name
+            <?php if (isset($_SESSION['message'])): ?>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> <?php echo $_SESSION['message']; unset($_SESSION['message']); ?>
+                </div>
+            <?php endif; ?>
 
-            // Create connection
-            $conn = new mysqli($servername, $username, $password, $dbname);
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i> <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+                </div>
+            <?php endif; ?>
 
-            // Check connection
-            if ($conn->connect_error) {
-                echo '<div class="alert alert-error">Connection failed: ' . $conn->connect_error . '</div>';
-                $connectionError = true;
-            } else {
-                // Get total user count
-                $sql = "SELECT COUNT(*) as total FROM user_details";
-                $result = $conn->query($sql);
-                
-                if ($result) {
-                    $totalUsers = $result->fetch_assoc()['total'];
-                    
-                    // Get today's registrations
-                    $sql = "SELECT COUNT(*) as today FROM user_details WHERE DATE(created_at) = CURDATE()";
-                    $result = $conn->query($sql);
-                    $todayUsers = $result ? $result->fetch_assoc()['today'] : 0;
-                    
-                    // Get this week's registrations
-                    $sql = "SELECT COUNT(*) as week FROM user_details WHERE YEARWEEK(created_at) = YEARWEEK(CURDATE())";
-                    $result = $conn->query($sql);
-                    $weekUsers = $result ? $result->fetch_assoc()['week'] : 0;
-                    
-                    // Get all user details
-                    $sql = "SELECT * FROM user_details ORDER BY created_at DESC";
-                    $result = $conn->query($sql);
-                } else {
-                    echo '<div class="alert alert-error">Error executing query: ' . $conn->error . '</div>';
-                    $totalUsers = 0;
-                    $todayUsers = 0;
-                    $weekUsers = 0;
-                }
-            ?>
-            
+            <form method="POST" action="" class="search-container">
+                <input type="text" class="search-input" name="search" placeholder="Search users by name, email, or phone..." 
+                       value="<?php echo htmlspecialchars($searchTerm); ?>">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </form>
+
             <!-- Stats Cards -->
             <div class="stats-container">
-                <div class="stat-card">
+                <div class="stat-card fade-in">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
                     <div class="stat-number"><?php echo $totalUsers; ?></div>
                     <div class="stat-label">Total Users</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card fade-in">
+                    <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
                     <div class="stat-number"><?php echo $todayUsers; ?></div>
-                    <div class="stat-label">Registered Today</div>
+                    <div class="stat-label">New Today</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card fade-in">
+                    <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
                     <div class="stat-number"><?php echo $weekUsers; ?></div>
-                    <div class="stat-label">Registered This Week</div>
+                    <div class="stat-label">New This Week</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">Pending Verifications</div>
+                <div class="stat-card fade-in">
+                    <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+                    <div class="stat-number"><?php echo $totalUsers > 0 ? '100%' : '0%'; ?></div>
+                    <div class="stat-label">Active Users</div>
                 </div>
             </div>
 
             <!-- User Table -->
-            <div class="table-container">
+            <div class="table-container fade-in">
+                <div class="table-header">
+                    <div class="table-title">Registered Users</div>
+                    <button class="export-btn">
+                        <i class="fas fa-download"></i> Export Data
+                    </button>
+                </div>
                 <table class="user-table">
                     <thead>
                         <tr>
@@ -461,78 +615,62 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        if ($result && $result->num_rows > 0) {
-                            while($row = $result->fetch_assoc()) {
-                                echo "<tr>
-                                    <td>{$row['id']}</td>
-                                    <td>{$row['full_name']}</td>
-                                    <td>" . ($row['username'] ? $row['username'] : '-') . "</td>
-                                    <td>{$row['email']}</td>
-                                    <td>{$row['nic']}</td>
-                                    <td>{$row['contact_number']}</td>
-                                    <td>" . date('Y-m-d', strtotime($row['created_at'])) . "</td>
+                        <?php if (!empty($users)): ?>
+                            <?php foreach ($users as $user): ?>
+                                <tr>
+                                    <td><?php echo $user['id']; ?></td>
+                                    <td><?php echo htmlspecialchars($user['full_name']); ?></td>
+                                    <td><?php echo $user['username'] ? htmlspecialchars($user['username']) : '-'; ?></td>
+                                    <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                    <td><?php echo htmlspecialchars($user['nic']); ?></td>
+                                    <td><?php echo htmlspecialchars($user['contact_number']); ?></td>
+                                    <td><?php echo date('Y-m-d', strtotime($user['created_at'])); ?></td>
                                     <td>
-                                        <button class='action-btn'>View</button>
-                                        <button class='action-btn delete-btn'>Delete</button>
+                                        <button class="action-btn view-btn" data-userid="<?php echo $user['id']; ?>">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        <form method="POST" action="" style="display: inline;">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                            <button type="submit" name="delete_user" class="action-btn delete-btn" 
+                                                    onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
                                     </td>
-                                </tr>";
-                            }
-                        } else {
-                            echo "<tr><td colspan='8' style='text-align: center;'>No users found</td></tr>";
-                        }
-                        $conn->close();
-                        ?>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 30px;">
+                                    No users found in the database.
+                                </td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
-            </div>
-
-            <?php } ?>
-
-            <!-- Pagination -->
-            <div class="pagination">
-                <button class="pagination-btn active">1</button>
-                <button class="pagination-btn">2</button>
-                <button class="pagination-btn">3</button>
-                <button class="pagination-btn">Next</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Simple search functionality
-        document.getElementById('searchBtn').addEventListener('click', function() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('.user-table tbody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+        // View button functionality
+        document.querySelectorAll('.view-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-userid');
+                alert('View details for user ID: ' + userId + '\nThis feature would show complete user details in a modal.');
+                // In a complete implementation, this would fetch user details via AJAX
+                // and display them in a modal
             });
         });
 
-        // Allow pressing Enter to search
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('searchBtn').click();
-            }
-        });
-
-        // Delete button functionality (for demonstration)
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const row = this.closest('tr');
-                const userName = row.querySelector('td:nth-child(2)').textContent;
-                
-                if (confirm(`Are you sure you want to delete ${userName}?`)) {
-                    // In a real application, you would send an AJAX request to delete the user
-                    row.style.display = 'none';
-                    alert(`${userName} has been deleted (simulated). In a real application, this would remove the user from the database.`);
-                }
+        // Add some interactive effects
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.08)';
             });
         });
     </script>
