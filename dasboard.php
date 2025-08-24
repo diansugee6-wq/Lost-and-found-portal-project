@@ -124,31 +124,31 @@
             </a>
             <ul>
                 <li>
-                    <a href="navdasboard.html" target="main-frame">
+                    <a href="navdasboard.php" target="main-frame">
                         <span class="icon">📊</span>
                         <span class="title">Dashboard</span>
                     </a>
                 </li>
                 <li>
-                    <a href="signupuser.html" target="main-frame">
+                    <a href="signupuser.php" target="main-frame">
                         <span class="icon">👤</span>
                         <span class="title">Profile</span>
                     </a>
                 </li>
                 <li>
-                    <a href="settings.html" target="main-frame">
+                    <a href="settings.php" target="main-frame">
                         <span class="icon">⚙️</span>
                         <span class="title">Settings</span>
                     </a>
                 </li>
                 <li>
-                    <a href="home.html" target="main-frame">
+                    <a href="home.php" target="main-frame">
                         <span class="icon">🏠</span>
                         <span class="title">Back to Home</span>
                     </a>
                 </li>
                 <li>
-                    <a href="logout.html" target="main-frame">
+                    <a href="logout.php" target="main-frame">
                         <span class="icon">🚪</span>
                         <span class="title">Logout</span>
                     </a>
@@ -157,7 +157,7 @@
         </div>
 
         <div class="content">
-            <iframe name="main-frame" src="navdasboard.html"></iframe>
+            <iframe name="main-frame" src="navdasboard.php"></iframe>
         </div>
     </div>
 

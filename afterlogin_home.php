@@ -401,7 +401,7 @@
           </p>
           </div>
           <div class="button-group">
-            <a href="reportitem.php" class="cta-button">Report an Item</a>
+            <a href="reportlost.php" class="cta-button">Report a Lost Item</a>
             <a href="claimmissing.php" class="cta-button claim-button">Claim Missing Item</a>
           </div>
         </div>

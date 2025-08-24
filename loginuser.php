@@ -228,12 +228,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     
     <nav>
-    <a href="Home.php">
+    <a href="home.php">
         <img src="logo2.png" alt="logo">
     </a>
     <ul>
-        <li><a href="Home.php">Home</a></li>
-        <li><a href="About.php">About Us</a></li>
+        <li><a href="home.php">Home</a></li>
+        <li><a href="about.php">About Us</a></li>
         <li><a href="reportitem.php">Report Items</a></li>
         <li><a href="claimmissing.php">Claim Missing</a></li>
         <li><a href="contactus.php">Contact Us</a></li>

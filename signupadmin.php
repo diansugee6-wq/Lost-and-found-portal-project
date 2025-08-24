@@ -158,15 +158,15 @@
     
     
     <nav>
-    <a href="Home.html">
+    <a href="home.php">
         <img src="logo2.png" alt="logo">
     </a>
     <ul>
-        <li><a href="Home.html">Home</a></li>
-        <li><a href="About.html">About Us</a></li>
-        <li><a href="reportitem.html">Report Items</a></li>
-        <li><a href="claimmissing.html">Claim Missing</a></li>
-        <li><a href="contactus.html">Contact Us</a></li>
+        <li><a href="home.php">Home</a></li>
+        <li><a href="about.php">About Us</a></li>
+        <li><a href="reportitem.php">Report Items</a></li>
+        <li><a href="claimmissing.php">Claim Missing</a></li>
+        <li><a href="contactus.php">Contact Us</a></li>
     </ul>
 </nav>
     

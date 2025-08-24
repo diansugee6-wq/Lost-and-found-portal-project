@@ -363,14 +363,14 @@
 <body>
   <nav class="nav">
     <div class="nav-left">
-      <a href="Home.php">
+      <a href="home.php">
         <img src="logo2.png" alt="Company logo" />
       </a>
       <ul>
-        <li><a class="active" href="Home.php">Home</a></li>
-        <li><a href="About.php">About Us</a></li>
-        <li><a href="reportitem.php">Report Items</a></li>
-        <li><a href="claimmissing.php">Claim Missing</a></li>
+        <li><a class="active" href="home.php">Home</a></li>
+        <li><a href="about.php">About Us</a></li>
+        <li><a href="loginuser.php">Report Items</a></li>
+        <li><a href="loginuser.php">Claim Missing</a></li>
         <li><a href="contactus.php">Contact Us</a></li>
       </ul>
     </div>
@@ -413,8 +413,8 @@
           </p>
           </div>
           <div class="button-group">
-            <a href="reportitem.php" class="cta-button">Report an Item</a>
-            <a href="claimmissing.php" class="cta-button claim-button">Claim Missing Item</a>
+            <a href="loginuser.php" class="cta-button">Report an Item</a>
+            <a href="loginuser.php" class="cta-button claim-button">Claim Missing Item</a>
           </div>
         </div>
         <div class="side-image">
@@ -476,7 +476,7 @@
       <p>📧 <a href="mailto:info@lostandfound.com">info@lostandfound.com</a></p>
       <p>📞 <a href="tel:+94762639287">+94 76 263 9287</a></p>
       <h3>Quick Links</h3>
-      <p>ℹ️ <a href="About.html">About Us</a></p>
+      <p>ℹ️ <a href="about.php">About Us</a></p>
       <p>📋 <a href="#how-it-works">How It Works</a></p>
       <h3>Follow Us On</h3>
       <p><a href="https://facebook.com">🌐 Facebook</a></p>
