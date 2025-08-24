@@ -1,9 +1,9 @@
-<<?php
+<?php
 session_start();
 
 // Check if admin is logged in
 if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: loginadmin.html");
+    header("Location: loginadmin.php");
     exit();
 }
 
@@ -21,17 +21,34 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Handle user actions
+$message = '';
+$error = '';
+
 // Handle user deletion
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_user'])) {
     $userId = $conn->real_escape_string($_POST['user_id']);
     $sql = "DELETE FROM user_details WHERE id = $userId";
     
     if ($conn->query($sql)) {
-        $_SESSION['message'] = "User deleted successfully!";
-        header("Location: admindashboard.php");
-        exit();
+        $message = "User deleted successfully!";
     } else {
-        $_SESSION['error'] = "Error deleting user: " . $conn->error;
+        $error = "Error deleting user: " . $conn->error;
+    }
+}
+
+// Handle user status change
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['toggle_status'])) {
+    $userId = $conn->real_escape_string($_POST['user_id']);
+    $currentStatus = $conn->real_escape_string($_POST['current_status']);
+    $newStatus = $currentStatus == 'active' ? 'inactive' : 'active';
+    
+    $sql = "UPDATE user_details SET status = '$newStatus' WHERE id = $userId";
+    
+    if ($conn->query($sql)) {
+        $message = "User status updated successfully!";
+    } else {
+        $error = "Error updating user status: " . $conn->error;
     }
 }
 
@@ -60,8 +77,8 @@ if ($result && $result->num_rows > 0) {
 
 // Get statistics
 $totalUsers = 0;
-$todayUsers = 0;
-$weekUsers = 0;
+$activeUsers = 0;
+$inactiveUsers = 0;
 
 $sql = "SELECT COUNT(*) as total FROM user_details";
 $result = $conn->query($sql);
@@ -69,16 +86,16 @@ if ($result) {
     $totalUsers = $result->fetch_assoc()['total'];
 }
 
-$sql = "SELECT COUNT(*) as today FROM user_details WHERE DATE(created_at) = CURDATE()";
+$sql = "SELECT COUNT(*) as active FROM user_details WHERE status = 'active' OR status IS NULL";
 $result = $conn->query($sql);
 if ($result) {
-    $todayUsers = $result->fetch_assoc()['today'];
+    $activeUsers = $result->fetch_assoc()['active'];
 }
 
-$sql = "SELECT COUNT(*) as week FROM user_details WHERE YEARWEEK(created_at) = YEARWEEK(CURDATE())";
+$sql = "SELECT COUNT(*) as inactive FROM user_details WHERE status = 'inactive'";
 $result = $conn->query($sql);
 if ($result) {
-    $weekUsers = $result->fetch_assoc()['week'];
+    $inactiveUsers = $result->fetch_assoc()['inactive'];
 }
 
 $conn->close();
@@ -89,7 +106,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Lost&Found.com</title>
+    <title>User Management - Lost&Found.com</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -98,6 +115,8 @@ $conn->close();
             --gray: #f5f5f5;
             --black1: #222;
             --dark-gray: #333;
+            --green: #4CAF50;
+            --red: #f44336;
         }
 
         * {
@@ -330,9 +349,12 @@ $conn->close();
             color: var(--black1);
         }
 
-        .export-btn {
-            background: var(--yellow);
-            border: none;
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
             padding: 10px 18px;
             border-radius: 6px;
             cursor: pointer;
@@ -340,6 +362,28 @@ $conn->close();
             display: flex;
             align-items: center;
             gap: 8px;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--yellow);
+            color: var(--black1);
+        }
+
+        .btn-success {
+            background: var(--green);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--red);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .user-table {
@@ -366,6 +410,26 @@ $conn->close();
             background-color: #f9f9f9;
         }
 
+        .status-active {
+            background-color: #e8f5e9;
+            color: var(--green);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-inactive {
+            background-color: #ffebee;
+            color: var(--red);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
         .action-btn {
             background: var(--yellow);
             border: none;
@@ -385,13 +449,19 @@ $conn->close();
             transform: translateY(-2px);
         }
 
-        .delete-btn {
+        .btn-edit {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-delete {
             background: #ff4d4d;
             color: white;
         }
 
-        .delete-btn:hover {
-            background: #ff3333;
+        .btn-status {
+            background: #FF9800;
+            color: white;
         }
 
         /* Message alerts */
@@ -496,31 +566,31 @@ $conn->close();
             </a>
             <ul>
                 <li>
-                    <a href="Dashboard.php" class="active">
+                    <a href="admindashboard.php">
                         <span class="icon"><i class="fas fa-chart-line"></i></span>
                         <span class="title">Dashboard</span>
                     </a>
                 </li>
                 <li>
-                    <a href="usermanagement.php">
+                    <a href="#" class="active">
                         <span class="icon"><i class="fas fa-users"></i></span>
                         <span class="title">User Management</span>
                     </a>
                 </li>
                 <li>
-                    <a href="itemreports.php">
+                    <a href="#">
                         <span class="icon"><i class="fas fa-clipboard-list"></i></span>
                         <span class="title">Item Reports</span>
                     </a>
                 </li>
                 <li>
-                    <a href="itemclaims.php">
+                    <a href="#">
                         <span class="icon"><i class="fas fa-search"></i></span>
                         <span class="title">Item Claims</span>
                     </a>
                 </li>
                 <li>
-                    <a href="settings.php">
+                    <a href="#">
                         <span class="icon"><i class="fas fa-cog"></i></span>
                         <span class="title">Settings</span>
                     </a>
@@ -537,7 +607,7 @@ $conn->close();
         <!-- Main Content -->
         <div class="main-content">
             <div class="dashboard-header">
-                <h1 class="dashboard-title">Admin Dashboard</h1>
+                <h1 class="dashboard-title">User Management</h1>
                 <div style="display: flex; align-items: center;">
                     <div class="user-welcome">
                         <div class="user-avatar">A</div>
@@ -549,15 +619,15 @@ $conn->close();
                 </div>
             </div>
 
-            <?php if (isset($_SESSION['message'])): ?>
+            <?php if (!empty($message)): ?>
                 <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> <?php echo $_SESSION['message']; unset($_SESSION['message']); ?>
+                    <i class="fas fa-check-circle"></i> <?php echo $message; ?>
                 </div>
             <?php endif; ?>
 
-            <?php if (isset($_SESSION['error'])): ?>
+            <?php if (!empty($error)): ?>
                 <div class="alert alert-error">
-                    <i class="fas fa-exclamation-circle"></i> <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+                    <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
                 </div>
             <?php endif; ?>
 
@@ -577,19 +647,19 @@ $conn->close();
                     <div class="stat-label">Total Users</div>
                 </div>
                 <div class="stat-card fade-in">
-                    <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
-                    <div class="stat-number"><?php echo $todayUsers; ?></div>
-                    <div class="stat-label">New Today</div>
+                    <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                    <div class="stat-number"><?php echo $activeUsers; ?></div>
+                    <div class="stat-label">Active Users</div>
                 </div>
                 <div class="stat-card fade-in">
-                    <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
-                    <div class="stat-number"><?php echo $weekUsers; ?></div>
-                    <div class="stat-label">New This Week</div>
+                    <div class="stat-icon"><i class="fas fa-user-times"></i></div>
+                    <div class="stat-number"><?php echo $inactiveUsers; ?></div>
+                    <div class="stat-label">Inactive Users</div>
                 </div>
                 <div class="stat-card fade-in">
                     <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
-                    <div class="stat-number"><?php echo $totalUsers > 0 ? '100%' : '0%'; ?></div>
-                    <div class="stat-label">Active Users</div>
+                    <div class="stat-number"><?php echo $totalUsers > 0 ? round(($activeUsers/$totalUsers)*100) : 0; ?>%</div>
+                    <div class="stat-label">Active Rate</div>
                 </div>
             </div>
 
@@ -597,9 +667,14 @@ $conn->close();
             <div class="table-container fade-in">
                 <div class="table-header">
                     <div class="table-title">Registered Users</div>
-                    <button class="export-btn">
-                        <i class="fas fa-download"></i> Export Data
-                    </button>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <button class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add User
+                        </button>
+                    </div>
                 </div>
                 <table class="user-table">
                     <thead>
@@ -610,13 +685,16 @@ $conn->close();
                             <th>Email</th>
                             <th>NIC</th>
                             <th>Contact Number</th>
+                            <th>Status</th>
                             <th>Registration Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (!empty($users)): ?>
-                            <?php foreach ($users as $user): ?>
+                            <?php foreach ($users as $user): 
+                                $status = isset($user['status']) ? $user['status'] : 'active';
+                            ?>
                                 <tr>
                                     <td><?php echo $user['id']; ?></td>
                                     <td><?php echo htmlspecialchars($user['full_name']); ?></td>
@@ -624,14 +702,27 @@ $conn->close();
                                     <td><?php echo htmlspecialchars($user['email']); ?></td>
                                     <td><?php echo htmlspecialchars($user['nic']); ?></td>
                                     <td><?php echo htmlspecialchars($user['contact_number']); ?></td>
+                                    <td>
+                                        <span class="status-<?php echo $status; ?>">
+                                            <?php echo ucfirst($status); ?>
+                                        </span>
+                                    </td>
                                     <td><?php echo date('Y-m-d', strtotime($user['created_at'])); ?></td>
                                     <td>
-                                        <button class="action-btn view-btn" data-userid="<?php echo $user['id']; ?>">
-                                            <i class="fas fa-eye"></i> View
+                                        <button class="action-btn btn-edit">
+                                            <i class="fas fa-edit"></i> Edit
                                         </button>
                                         <form method="POST" action="" style="display: inline;">
                                             <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                            <button type="submit" name="delete_user" class="action-btn delete-btn" 
+                                            <input type="hidden" name="current_status" value="<?php echo $status; ?>">
+                                            <button type="submit" name="toggle_status" class="action-btn btn-status">
+                                                <i class="fas fa-power-off"></i> 
+                                                <?php echo $status == 'active' ? 'Deactivate' : 'Activate'; ?>
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="" style="display: inline;">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                            <button type="submit" name="delete_user" class="action-btn btn-delete" 
                                                     onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
                                                 <i class="fas fa-trash"></i> Delete
                                             </button>
@@ -641,7 +732,7 @@ $conn->close();
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" style="text-align: center; padding: 30px;">
+                                <td colspan="9" style="text-align: center; padding: 30px;">
                                     No users found in the database.
                                 </td>
                             </tr>
@@ -653,16 +744,6 @@ $conn->close();
     </div>
 
     <script>
-        // View button functionality
-        document.querySelectorAll('.view-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const userId = this.getAttribute('data-userid');
-                alert('View details for user ID: ' + userId + '\nThis feature would show complete user details in a modal.');
-                // In a complete implementation, this would fetch user details via AJAX
-                // and display them in a modal
-            });
-        });
-
         // Add some interactive effects
         document.querySelectorAll('.stat-card').forEach(card => {
             card.addEventListener('mouseenter', function() {
@@ -671,6 +752,17 @@ $conn->close();
             
             card.addEventListener('mouseleave', function() {
                 this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.08)';
+            });
+        });
+
+        // Edit button functionality
+        document.querySelectorAll('.btn-edit').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const userId = row.querySelector('td:first-child').textContent;
+                const userName = row.querySelector('td:nth-child(2)').textContent;
+                
+                alert('Edit user: ' + userName + ' (ID: ' + userId + ')\nThis would open an edit modal in a complete implementation.');
             });
         });
     </script>
