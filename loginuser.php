@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($user && password_verify($password, $user['password'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
-        echo "<script>alert('Login successful!'); window.location.href='afterlogin_home.php';</script>";
+        echo "<script>alert('Login successful!'); window.location.href='welcome.php';</script>";
         exit();
     } else {
         echo "<script>alert('Invalid username or password');</script>";

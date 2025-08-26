@@ -1,16 +1,14 @@
 <?php
 session_start();
-require_once 'configure.php'; // Assumes this connects to the database
+require_once 'configure.php';
 
-// Default guest name
-$fullName = "Guest";
+$fullName = "Guest"; // Default
 
 if (isset($_SESSION['user_id'])) {
     try {
         $database = new Database();
         $conn = $database->getConnection();
 
-        // Fetch user full name
         $stmt = $conn->prepare("SELECT full_name FROM user_details WHERE id = :user_id");
         $stmt->bindParam(':user_id', $_SESSION['user_id'], PDO::PARAM_INT);
         $stmt->execute();
@@ -19,46 +17,23 @@ if (isset($_SESSION['user_id'])) {
         if ($user) {
             $fullName = $user['full_name'];
         }
-
-        // Fetch reported items
-        $stmt = $conn->prepare("SELECT item_id, item_name, category, description, lost_location, lost_date, status, image_path FROM reported_items WHERE status IN ('pending', 'found')");
-        $stmt->execute();
-        $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
+    } catch(Exception $e) {
         $fullName = "Guest";
-        $items = [];
     }
-} else {
-    $items = [];
 }
 ?>
 <script>
   const userData = {
-    fullName: "<?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>",
-    isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>
-  };
-  const itemsData = <?php echo json_encode($items); ?>;
-
-</script>
-
-const userData = {
-    fullName: "<?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>",
-    isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>
-  };
-  const itemsData = <?php echo json_encode($items); ?>; 
-
-<script>
-  const userData = {
-    fullName: "<?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>",
-    isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>
+    fullName: "<?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>"
   };
 </script>
+
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Lost&Found.com</title>
+    
   <style>
     html {
       scroll-behavior: smooth;
@@ -151,30 +126,6 @@ const userData = {
       background: rgba(0,0,0,0.3);
       border-radius: 20px;
       backdrop-filter: blur(5px);
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      background-color: #ffffff33;
-      min-width: 160px;
-      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-    }
-
-    .dropdown-content a {
-      color: black;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-    }
-
-    .dropdown-content a:hover {
-      background-color: #f1f1f1;
-    }
-
-    .dropdown:hover .dropdown-content {
-      display: block;
     }
 
     .cover-photo {
@@ -446,6 +397,31 @@ const userData = {
       color: #2e7d32;
     }
 
+    footer.advanced-footer {
+      background-color: #333333;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    footer.advanced-footer h3 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    footer.advanced-footer p {
+      margin: 5px 0;
+    }
+
+    footer.advanced-footer a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    footer.advanced-footer a:hover {
+      text-decoration: underline;
+    }
+
     #how-it-works {
       background: linear-gradient(135deg, #f3e5ab);
       padding: 40px 20px;
@@ -480,36 +456,6 @@ const userData = {
       transform: scale(1.05);
     }
 
-    .how-it-works-icon img {
-      width: 50px;
-      height: 50px;
-    }
-
-    footer.advanced-footer {
-      background-color: #333333;
-      color: white;
-      text-align: center;
-      padding: 20px 0;
-    }
-
-    footer.advanced-footer h3 {
-      margin-top: 20px;
-      margin-bottom: 10px;
-    }
-
-    footer.advanced-footer p {
-      margin: 5px 0;
-    }
-
-    footer.advanced-footer a {
-      color: #ffffff;
-      text-decoration: none;
-    }
-
-    footer.advanced-footer a:hover {
-      text-decoration: underline;
-    }
-
     @media (max-width: 768px) {
       .content-wrapper {
         flex-direction: column;
@@ -534,37 +480,21 @@ const userData = {
 <body>
   <nav class="nav">
     <div class="nav-left">
-      <a href="home.php"><img src="logo2.png" alt="Company logo" /></a>
+      <a href="home.php">
+        <img src="logo2.png" alt="Company logo" />
+      </a>
       <ul>
         <li><a class="active" href="home.php">Home</a></li>
-        <li><a href="about.php">About Us</a></li>
-        <li><a href="javascript:void(0)" onclick="triggerAction('reportModal')">Report Items</a></li>
-        <li><a href="javascript:void(0)" onclick="triggerAction('searchSection')">Claim Missing</a></li>
-        <li><a href="contactus.php">Contact Us</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#report">Report Items</a></li>
+        <li><a href="#claim">Claim Missing</a></li>
+        <li><a href="#contact">Contact Us</a></li>
       </ul>
     </div>
     <div class="nav-right">
       <span class="user-greeting" id="userGreeting">Welcome, Guest!</span>
       <ul>
-        <?php if (isset($_SESSION['user_id'])): ?>
-          <li><a href="profile.php">My Profile</a></li>
-          <li><a href="logout.php">Logout</a></li>
-        <?php else: ?>
-          <li class="dropdown">
-            <a href="javascript:void(0)">Login</a>
-            <div class="dropdown-content">
-              <a href="loginuser.php">User</a>
-              <a href="loginadmin.php">Admin</a>
-            </div>
-          </li>
-          <li class="dropdown">
-            <a href="javascript:void(0)">Sign Up</a>
-            <div class="dropdown-content">
-              <a href="signupuser.php">User</a>
-              <a href="signupadmin.php">Admin</a>
-            </div>
-          </li>
-        <?php endif; ?>
+        <li><a href="logout.php">Logout</a></li>
       </ul>
     </div>
   </nav>
@@ -576,11 +506,7 @@ const userData = {
       <div class="content-wrapper">
         <div class="text-buttons">
           <div class="personalized-welcome" id="personalizedWelcome">
-            <?php if(isset($_SESSION['user_id'])): ?>
-              Welcome <?php echo htmlspecialchars($fullName); ?> to Lost & Found
-            <?php else: ?>
-              Welcome to Lost & Found
-            <?php endif; ?>
+            Welcome to Lost & Found
           </div>
           <p>
             Have you lost something or found an item that belongs to someone else? Our platform connects people
@@ -592,9 +518,9 @@ const userData = {
             here to help you every step of the way!
           </p>
           <div class="button-group">
-            <button class="cta-button" onclick="triggerAction('reportModal')">Report a Lost Item</button>
-            <button class="cta-button" onclick="triggerAction('foundModal')">Report Found Item</button>
-            <button class="cta-button claim-button" onclick="triggerAction('searchSection')">Search & Claim Items</button>
+            <button class="cta-button" onclick="openModal('reportModal')">Report a Lost Item</button>
+            <button class="cta-button" onclick="openModal('foundModal')">Report Found Item</button>
+            <button class="cta-button claim-button" onclick="toggleSearch()">Search & Claim Items</button>
           </div>
         </div>
         <div class="side-image">
@@ -623,7 +549,7 @@ const userData = {
         <button class="search-btn" onclick="searchItems()">Search</button>
       </div>
       <div class="items-grid" id="itemsGrid">
-        <!-- Items will be populated here -->
+        <!-- Sample items will be populated here -->
       </div>
     </div>
   </section>
@@ -714,47 +640,31 @@ const userData = {
     </div>
   </div>
 
-  <!-- Poster Section -->
-  <section id="poster-section">
-    <div class="poster-border-wrapper">
-      <div class="poster-container">
-        <img src="poster2.png" alt="Lost & Found Poster" />
-        <div class="poster-text">
-          <h1>Join the Lost & Found Network</h1>
-          <p>
-            Welcome to our Lost & Found Network — a dedicated platform designed to help you reconnect with your valuable belongings quickly and easily. Whether you’ve misplaced your wallet, keys, or any personal item, or you’ve found something that someone else has lost, our system is here to bridge that gap. By reporting lost or found items through our user-friendly portal, you become part of a community committed to helping one another. Our secure database stores detailed descriptions and images to increase the chances of identifying and returning items to their rightful owners. With real-time search features and administrative verification, we ensure that claims are legitimate and that the process is smooth and reliable. Join us today to be an active participant in making our community safer and more connected — because every item matters, and every reunion counts.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- How It Works Section -->
   <section id="how-it-works">
     <h2 class="animated-header">HOW IT WORKS!</h2>
     <div class="how-it-works-wrapper">
       <div class="how-it-works-card">
-        <div class="how-it-works-icon"><img src="search.png" alt="Search Icon" /></div>
+        <div class="how-it-works-icon">🔍</div>
         <h3>Step 1: Report</h3>
         <p>User reports a lost or found item using our portal interface.</p>
       </div>
       <div class="how-it-works-card">
-        <div class="how-it-works-icon"><img src="db.png" alt="Database Icon" /></div>
+        <div class="how-it-works-icon">💾</div>
         <h3>Step 2: Database Entry</h3>
         <p>The item details are stored in our secure database system.</p>
       </div>
       <div class="how-it-works-card">
-        <div class="how-it-works-icon"><img src="search2.png" alt="Search Icon" /></div>
+        <div class="how-it-works-icon">🔎</div>
         <h3>Step 3: Search</h3>
         <p>Users can search for their lost items using various filters.</p>
       </div>
       <div class="how-it-works-card">
-        <div class="how-it-works-icon"><img src="verify.png" alt="Verify Icon" /></div>
+        <div class="how-it-works-icon">✅</div>
         <h3>Step 4: Verification</h3>
         <p>Admin verifies claims and matches them with found items.</p>
       </div>
       <div class="how-it-works-card">
-        <div class="how-it-works-icon"><img src="return.png" alt="Return Icon" /></div>
+        <div class="how-it-works-icon">🎯</div>
         <h3>Step 5: Return</h3>
         <p>Verified items are returned to their rightful owners.</p>
       </div>
@@ -767,7 +677,7 @@ const userData = {
       <p>📧 <a href="mailto:info@lostandfound.com">info@lostandfound.com</a></p>
       <p>📞 <a href="tel:+94762639287">+94 76 263 9287</a></p>
       <h3>Quick Links</h3>
-      <p>ℹ️ <a href="about.php">About Us</a></p>
+      <p>ℹ️ <a href="#about">About Us</a></p>
       <p>📋 <a href="#how-it-works">How It Works</a></p>
       <h3>Follow Us On</h3>
       <p><a href="https://facebook.com">🌐 Facebook</a></p>
@@ -778,149 +688,186 @@ const userData = {
   </footer>
 
   <script>
-// Initialize page
-function initializePage() {
-  updateUserGreeting();
-  displayItems(itemsData);
-}
+    // User data - you can modify this or fetch from a database
+    /*const userData = {
+      fullName: "Ovin de Silva",
+      email: "ovin.desilva@example.com",
+      userId: "12345"
+    };*/
 
-// Update user greeting
-function updateUserGreeting() {
-  const userGreeting = document.getElementById('userGreeting');
-  const personalizedWelcome = document.getElementById('personalizedWelcome');
-  
-  userGreeting.textContent = `Welcome, ${userData.fullName}!`;
-  if (userData.isLoggedIn) {
-    personalizedWelcome.textContent = `Welcome ${userData.fullName} to Lost & Found`;
-  }
-}
+    // Sample items data
+    let itemsData = [
+      {
+        id: 1,
+        name: "iPhone 13",
+        category: "electronics",
+        description: "Black iPhone 13 with cracked screen protector",
+        location: "University Library",
+        date: "2025-08-20",
+        status: "lost",
+        contact: "john@example.com"
+      },
+      {
+        id: 2,
+        name: "Blue Backpack",
+        category: "personal",
+        description: "Navy blue backpack with laptop compartment",
+        location: "Bus Station",
+        date: "2025-08-22",
+        status: "found",
+        contact: "mary@example.com"
+      },
+      {
+        id: 3,
+        name: "Car Keys",
+        category: "accessories",
+        description: "Toyota car keys with red keychain",
+        location: "Shopping Mall",
+        date: "2025-08-24",
+        status: "lost",
+        contact: "alex@example.com"
+      }
+    ];
 
-// Trigger action based on login status
-function triggerAction(targetId) {
-  if (!userData.isLoggedIn) {
-    window.location.href = 'loginuser.php';
-  } else if (targetId === 'searchSection') {
-    toggleSearch();
-  } else {
-    openModal(targetId);
-  }
-}
-
-// Modal functions
-function openModal(modalId) {
-  document.getElementById(modalId).style.display = 'block';
-}
-
-function closeModal(modalId) {
-  document.getElementById(modalId).style.display = 'none';
-}
-
-// Toggle search section
-function toggleSearch() {
-  const searchSection = document.getElementById('searchSection');
-  if (searchSection.style.display === 'none' || searchSection.style.display === '') {
-    searchSection.style.display = 'block';
-    searchSection.scrollIntoView({ behavior: 'smooth' });
-  } else {
-    searchSection.style.display = 'none';
-  }
-}
-
-// Display items
-function displayItems(items) {
-  const itemsGrid = document.getElementById('itemsGrid');
-  itemsGrid.innerHTML = '';
-
-  items.forEach(item => {
-    const itemCard = document.createElement('div');
-    itemCard.className = 'item-card';
-    itemCard.innerHTML = `
-      <div class="item-status status-${item.status}">${item.status.toUpperCase()}</div>
-      <h3>${item.item_name}</h3>
-      ${item.image_path ? `<img src="${item.image_path}" alt="${item.item_name}" style="max-width: 100%; border-radius: 5px; margin-bottom: 10px;" />` : ''}
-      <p><strong>Category:</strong> ${item.category}</p>
-      <p><strong>Description:</strong> ${item.description}</p>
-      <p><strong>Location:</strong> ${item.lost_location}</p>
-      <p><strong>Date:</strong> ${item.lost_date}</p>
-      <button class="submit-btn" onclick="claimItem(${item.item_id})">
-        ${item.status === 'pending' ? 'I Found This' : 'This is Mine'}
-      </button>
-    `;
-    itemsGrid.appendChild(itemCard);
-  });
-}
-
-// Search items
-function searchItems() {
-  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-  const categoryFilter = document.getElementById('categoryFilter').value;
-
-  let filteredItems = itemsData.filter(item => {
-    const matchesSearch = item.item_name.toLowerCase().includes(searchTerm) || 
-                         item.description.toLowerCase().includes(searchTerm) ||
-                         item.lost_location.toLowerCase().includes(searchTerm);
-    
-    const matchesCategory = !categoryFilter || item.category === categoryFilter;
-    
-    return matchesSearch && matchesCategory;
-  });
-
-  displayItems(filteredItems);
-}
-
-// Claim item
-function claimItem(itemId) {
-  if (!userData.isLoggedIn) {
-    window.location.href = 'loginuser.php';
-    return;
-  }
-  const item = itemsData.find(i => i.item_id === itemId);
-  if (item) {
-    alert(`Claim submitted for: ${item.item_name}\nYou will be contacted soon for verification.`);
-  }
-}
-
-// Form submissions
-document.getElementById('reportForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  if (!userData.isLoggedIn) {
-    window.location.href = 'loginuser.php';
-    return;
-  }
-  const formData = new FormData(e.target);
-  // In production, send formData to a PHP script via AJAX to insert into reported_items
-  alert('Lost item reported successfully!'); // Replace with AJAX call
-  closeModal('reportModal');
-  e.target.reset();
-  // Refresh items from database in production
-});
-
-document.getElementById('foundForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  if (!userData.isLoggedIn) {
-    window.location.href = 'loginuser.php';
-    return;
-  }
-  const formData = new FormData(e.target);
-  // In production, send formData to a PHP script via AJAX to insert into reported_items
-  alert('Found item reported successfully!'); // Replace with AJAX call
-  closeModal('foundModal');
-  e.target.reset();
-  // Refresh items from database in production
-});
-
-// Close modals when clicking outside
-window.onclick = function(event) {
-  const modals = document.getElementsByClassName('modal');
-  for (let modal of modals) {
-    if (event.target === modal) {
-      modal.style.display = 'none';
+    // Initialize page
+    function initializePage() {
+      updateUserGreeting();
+      displayItems(itemsData);
     }
-  }
-}
 
-// Initialize page when loaded
-window.onload = initializePage;
-</script>
+    // Update user greeting
+    function updateUserGreeting() {
+      const userGreeting = document.getElementById('userGreeting');
+      const personalizedWelcome = document.getElementById('personalizedWelcome');
+      
+      userGreeting.textContent = `Welcome, ${userData.fullName}!`;
+      personalizedWelcome.textContent = `Welcome ${userData.fullName} to Lost & Found`;
+    }
+
+    // Modal functions
+    function openModal(modalId) {
+      document.getElementById(modalId).style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Toggle search section
+    function toggleSearch() {
+      const searchSection = document.getElementById('searchSection');
+      if (searchSection.style.display === 'none' || searchSection.style.display === '') {
+        searchSection.style.display = 'block';
+        searchSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        searchSection.style.display = 'none';
+      }
+    }
+
+    // Display items
+    function displayItems(items) {
+      const itemsGrid = document.getElementById('itemsGrid');
+      itemsGrid.innerHTML = '';
+
+      items.forEach(item => {
+        const itemCard = document.createElement('div');
+        itemCard.className = 'item-card';
+        itemCard.innerHTML = `
+          <div class="item-status status-${item.status}">${item.status.toUpperCase()}</div>
+          <h3>${item.name}</h3>
+          <p><strong>Category:</strong> ${item.category}</p>
+          <p><strong>Description:</strong> ${item.description}</p>
+          <p><strong>Location:</strong> ${item.location}</p>
+          <p><strong>Date:</strong> ${item.date}</p>
+          <button class="submit-btn" onclick="claimItem(${item.id})">
+            ${item.status === 'lost' ? 'I Found This' : 'This is Mine'}
+          </button>
+        `;
+        itemsGrid.appendChild(itemCard);
+      });
+    }
+
+    // Search items
+    function searchItems() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const categoryFilter = document.getElementById('categoryFilter').value;
+
+      let filteredItems = itemsData.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchTerm) || 
+                            item.description.toLowerCase().includes(searchTerm) ||
+                            item.location.toLowerCase().includes(searchTerm);
+        
+        const matchesCategory = !categoryFilter || item.category === categoryFilter;
+        
+        return matchesSearch && matchesCategory;
+      });
+
+      displayItems(filteredItems);
+    }
+
+    // Claim item
+    function claimItem(itemId) {
+      const item = itemsData.find(i => i.id === itemId);
+      if (item) {
+        alert(`Claim submitted for: ${item.name}\nYou will be contacted soon for verification.`);
+      }
+    }
+
+    // Form submissions
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const newItem = {
+        id: itemsData.length + 1,
+        name: formData.get('itemName'),
+        category: formData.get('category'),
+        description: formData.get('description'),
+        location: formData.get('lastSeen'),
+        date: formData.get('dateTime'),
+        status: 'lost',
+        contact: formData.get('contactInfo')
+      };
+      
+      itemsData.push(newItem);
+      alert('Lost item reported successfully!');
+      closeModal('reportModal');
+      e.target.reset();
+      displayItems(itemsData);
+    });
+
+    document.getElementById('foundForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const newItem = {
+        id: itemsData.length + 1,
+        name: formData.get('foundItemName'),
+        category: formData.get('foundCategory'),
+        description: formData.get('foundDescription'),
+        location: formData.get('foundLocation'),
+        date: formData.get('foundDateTime'),
+        status: 'found',
+        contact: formData.get('finderContact')
+      };
+      
+      itemsData.push(newItem);
+      alert('Found item reported successfully!');
+      closeModal('foundModal');
+      e.target.reset();
+      displayItems(itemsData);
+    });
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+      const modals = document.getElementsByClassName('modal');
+      for (let modal of modals) {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      }
+    }
+
+    // Initialize page when loaded
+    window.onload = initializePage;
+  </script>
 </body>
 </html>
