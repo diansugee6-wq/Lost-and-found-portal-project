@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+//if (!isset($_SESSION['user_id'])) {
+    //header("Location: loginuser.php");
+   // exit();
+//}
+
 require_once 'configure.php'; // Assumes this connects to the database
 
 // Default guest name
@@ -21,7 +27,7 @@ if (isset($_SESSION['user_id'])) {
         }
 
         // Fetch reported items
-        $stmt = $conn->prepare("SELECT item_id, item_name, category, description, lost_location, lost_date, status, image_path FROM reported_items WHERE status IN ('pending', 'found')");
+        //$stmt = $conn->prepare("SELECT item_id, item_name, category, description, lost_location, lost_date, status, image_path FROM reported_items WHERE status IN ('pending', 'found')");
         $stmt->execute();
         $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
@@ -32,28 +38,6 @@ if (isset($_SESSION['user_id'])) {
     $items = [];
 }
 ?>
-<script>
-  const userData = {
-    fullName: "<?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>",
-    isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>
-  };
-  const itemsData = <?php echo json_encode($items); ?>;
-
-</script>
-
-const userData = {
-    fullName: "<?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>",
-    isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>
-  };
-  const itemsData = <?php echo json_encode($items); ?>; 
-
-<script>
-  const userData = {
-    fullName: "<?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>",
-    isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>
-  };
-</script>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -143,14 +127,24 @@ const userData = {
       background-color: white;
     }
 
-    .user-greeting {
-      color: white;
-      font-weight: bold;
-      margin-right: 15px;
-      padding: 8px 12px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 20px;
-      backdrop-filter: blur(5px);
+    .user-greeting a {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+      position: relative;
+      z-index: 1000;
+      text-decoration: none;
+      color: inherit;
+      transition: opacity 0.3s ease, transform 0.2s ease;
+    }
+
+    .user-greeting a:hover {
+      opacity: 0.8;
+      transform: scale(1.02);
+      text-decoration: underline;
+    }
+
+    .user-greeting a:active {
+      transform: scale(0.98);
     }
 
     .dropdown-content {
@@ -273,20 +267,67 @@ const userData = {
       box-shadow: 0 6px 12px rgba(46, 204, 113, 0.7);
     }
 
+    #poster-section {
+      padding: 40px 20px;
+    }
+
+    .poster-border-wrapper {
+      padding: 15px 40px;
+      border: 4px solid black;
+      background: linear-gradient(135deg, #f3e5ab);
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 0;
+      margin: 0;
+    }
+
+    .poster-container {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .poster-container img {
+      width: 400px;
+      height: auto;
+      object-fit: cover;
+      border-radius: 8px;
+      display: block;
+      transform: rotate(-10deg);
+      transition: transform 0.3s ease;
+    }
+
+    .poster-text {
+      flex: 1;
+      font-family: 'Arial Black', Arial, sans-serif;
+      font-size: 1.3em;
+      line-height: 1.6;
+      color: #333;
+      margin-left: 20px;
+    }
+
     .side-image {
       flex: 1;
-      text-align: center;
+      text-align: end;
+      text-align: top;
     }
 
-    .side-image img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      object-fit: cover;
-    }
+    .side-image {
+  position: absolute;   /* take it out of normal flow */
+  top: 720px;             /* vertical position */
+  right: 200px;          /* distance from right edge */
+  transform: translateY(-50%); /* center vertically */
+}
 
-    /* Modal Styles */
+.side-image img {
+  max-width: 60%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  object-fit: cover;
+}
+
+
     .modal {
       display: none;
       position: fixed;
@@ -436,7 +477,7 @@ const userData = {
       margin-bottom: 10px;
     }
 
-    .status-lost {
+    .status-pending {
       background-color: #ffebee;
       color: #c62828;
     }
@@ -538,13 +579,30 @@ const userData = {
       <ul>
         <li><a class="active" href="home.php">Home</a></li>
         <li><a href="about.php">About Us</a></li>
-        <li><a href="javascript:void(0)" onclick="triggerAction('reportModal')">Report Items</a></li>
-        <li><a href="javascript:void(0)" onclick="triggerAction('searchSection')">Claim Missing</a></li>
+        <li>
+    <?php if (isset($_SESSION['user_id'])): ?>
+      <a href="report_lost.php">Report Items</a>
+    <?php else: ?>
+      <a href="loginuser.php">Report Items</a>
+    <?php endif; ?>
+  </li>
+        <li>
+    <?php if (isset($_SESSION['user_id'])): ?>
+      <a href="claimmissing.php">Claim Missing</a>
+    <?php else: ?>
+      <a href="loginuser.php">Claim Missing</a>
+    <?php endif; ?>
+  </li>
         <li><a href="contactus.php">Contact Us</a></li>
+        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 1): ?>
+    <li><a href="admindashboard.php">Dashboard</a></li>
+  <?php endif; ?>
       </ul>
     </div>
     <div class="nav-right">
-      <span class="user-greeting" id="userGreeting">Welcome, Guest!</span>
+      <span class="user-greeting" id="userGreeting">
+        <a href="profile.php">Welcome, <?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>!</a>
+      </span>
       <ul>
         <?php if (isset($_SESSION['user_id'])): ?>
           <li><a href="profile.php">My Profile</a></li>
@@ -576,8 +634,8 @@ const userData = {
       <div class="content-wrapper">
         <div class="text-buttons">
           <div class="personalized-welcome" id="personalizedWelcome">
-            <?php if(isset($_SESSION['user_id'])): ?>
-              Welcome <?php echo htmlspecialchars($fullName); ?> to Lost & Found
+            <?php if (isset($_SESSION['user_id'])): ?>
+              Welcome <?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?> to Lost & Found
             <?php else: ?>
               Welcome to Lost & Found
             <?php endif; ?>
@@ -592,127 +650,18 @@ const userData = {
             here to help you every step of the way!
           </p>
           <div class="button-group">
-            <button class="cta-button" onclick="triggerAction('reportModal')">Report a Lost Item</button>
-            <button class="cta-button" onclick="triggerAction('foundModal')">Report Found Item</button>
-            <button class="cta-button claim-button" onclick="triggerAction('searchSection')">Search & Claim Items</button>
-          </div>
-        </div>
+            <a href="report_lost.php" class="cta-button">Report a Lost Item</a>
+            <a href="claimmissing.php" class="cta-button">Claim Missing Item</a>
+
+            </div>
+          
         <div class="side-image">
-          <img src="logo2.png" width="60%" height="100%" alt="Lost & Found Illustration" />
-          <p style="margin-top: 20px;">&copy;2025 Lost&Found Inc. All rights reserved.</p>
+          <img src="logo2.png" alt="Lost & Found Illustration" />
+          <p style="margin-top: 10px;">&copy;2025 Lost&Found Inc. All rights reserved.</p>
         </div>
       </div>
     </div>
   </section>
-
-  <!-- Search Section -->
-  <section class="search-section" id="searchSection" style="display: none;">
-    <div class="search-container">
-      <h2>Search for Items</h2>
-      <div class="search-form">
-        <input type="text" class="search-input" id="searchInput" placeholder="Search by item name, description, or location...">
-        <select class="search-input" id="categoryFilter">
-          <option value="">All Categories</option>
-          <option value="electronics">Electronics</option>
-          <option value="personal">Personal Items</option>
-          <option value="clothing">Clothing</option>
-          <option value="accessories">Accessories</option>
-          <option value="documents">Documents</option>
-          <option value="other">Other</option>
-        </select>
-        <button class="search-btn" onclick="searchItems()">Search</button>
-      </div>
-      <div class="items-grid" id="itemsGrid">
-        <!-- Items will be populated here -->
-      </div>
-    </div>
-  </section>
-
-  <!-- Report Lost Item Modal -->
-  <div id="reportModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('reportModal')">&times;</span>
-      <h2>Report a Lost Item</h2>
-      <form id="reportForm">
-        <div class="form-group">
-          <label for="itemName">Item Name:</label>
-          <input type="text" id="itemName" name="itemName" required>
-        </div>
-        <div class="form-group">
-          <label for="category">Category:</label>
-          <select id="category" name="category" required>
-            <option value="">Select Category</option>
-            <option value="electronics">Electronics</option>
-            <option value="personal">Personal Items</option>
-            <option value="clothing">Clothing</option>
-            <option value="accessories">Accessories</option>
-            <option value="documents">Documents</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="description">Description:</label>
-          <textarea id="description" name="description" placeholder="Provide detailed description..." required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="lastSeen">Last Seen Location:</label>
-          <input type="text" id="lastSeen" name="lastSeen" required>
-        </div>
-        <div class="form-group">
-          <label for="dateTime">Date & Time Lost:</label>
-          <input type="datetime-local" id="dateTime" name="dateTime" required>
-        </div>
-        <div class="form-group">
-          <label for="contactInfo">Your Contact Information:</label>
-          <input type="text" id="contactInfo" name="contactInfo" placeholder="Phone or Email" required>
-        </div>
-        <button type="submit" class="submit-btn">Report Lost Item</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Report Found Item Modal -->
-  <div id="foundModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('foundModal')">&times;</span>
-      <h2>Report a Found Item</h2>
-      <form id="foundForm">
-        <div class="form-group">
-          <label for="foundItemName">Item Name:</label>
-          <input type="text" id="foundItemName" name="foundItemName" required>
-        </div>
-        <div class="form-group">
-          <label for="foundCategory">Category:</label>
-          <select id="foundCategory" name="foundCategory" required>
-            <option value="">Select Category</option>
-            <option value="electronics">Electronics</option>
-            <option value="personal">Personal Items</option>
-            <option value="clothing">Clothing</option>
-            <option value="accessories">Accessories</option>
-            <option value="documents">Documents</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="foundDescription">Description:</label>
-          <textarea id="foundDescription" name="foundDescription" placeholder="Describe the found item..." required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="foundLocation">Found Location:</label>
-          <input type="text" id="foundLocation" name="foundLocation" required>
-        </div>
-        <div class="form-group">
-          <label for="foundDateTime">Date & Time Found:</label>
-          <input type="datetime-local" id="foundDateTime" name="foundDateTime" required>
-        </div>
-        <div class="form-group">
-          <label for="finderContact">Your Contact Information:</label>
-          <input type="text" id="finderContact" name="finderContact" placeholder="Phone or Email" required>
-        </div>
-        <button type="submit" class="submit-btn">Report Found Item</button>
-      </form>
-    </div>
-  </div>
 
   <!-- Poster Section -->
   <section id="poster-section">
@@ -778,149 +727,40 @@ const userData = {
   </footer>
 
   <script>
-// Initialize page
-function initializePage() {
-  updateUserGreeting();
-  displayItems(itemsData);
-}
+    const userData = {
+      fullName: "<?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?>",
+      isLoggedIn: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>
+    };
+    const itemsData = <?php echo json_encode($items); ?>;
 
-// Update user greeting
-function updateUserGreeting() {
-  const userGreeting = document.getElementById('userGreeting');
-  const personalizedWelcome = document.getElementById('personalizedWelcome');
-  
-  userGreeting.textContent = `Welcome, ${userData.fullName}!`;
-  if (userData.isLoggedIn) {
-    personalizedWelcome.textContent = `Welcome ${userData.fullName} to Lost & Found`;
-  }
-}
-
-// Trigger action based on login status
-function triggerAction(targetId) {
-  if (!userData.isLoggedIn) {
-    window.location.href = 'loginuser.php';
-  } else if (targetId === 'searchSection') {
-    toggleSearch();
-  } else {
-    openModal(targetId);
-  }
-}
-
-// Modal functions
-function openModal(modalId) {
-  document.getElementById(modalId).style.display = 'block';
-}
-
-function closeModal(modalId) {
-  document.getElementById(modalId).style.display = 'none';
-}
-
-// Toggle search section
-function toggleSearch() {
-  const searchSection = document.getElementById('searchSection');
-  if (searchSection.style.display === 'none' || searchSection.style.display === '') {
-    searchSection.style.display = 'block';
-    searchSection.scrollIntoView({ behavior: 'smooth' });
-  } else {
-    searchSection.style.display = 'none';
-  }
-}
-
-// Display items
-function displayItems(items) {
-  const itemsGrid = document.getElementById('itemsGrid');
-  itemsGrid.innerHTML = '';
-
-  items.forEach(item => {
-    const itemCard = document.createElement('div');
-    itemCard.className = 'item-card';
-    itemCard.innerHTML = `
-      <div class="item-status status-${item.status}">${item.status.toUpperCase()}</div>
-      <h3>${item.item_name}</h3>
-      ${item.image_path ? `<img src="${item.image_path}" alt="${item.item_name}" style="max-width: 100%; border-radius: 5px; margin-bottom: 10px;" />` : ''}
-      <p><strong>Category:</strong> ${item.category}</p>
-      <p><strong>Description:</strong> ${item.description}</p>
-      <p><strong>Location:</strong> ${item.lost_location}</p>
-      <p><strong>Date:</strong> ${item.lost_date}</p>
-      <button class="submit-btn" onclick="claimItem(${item.item_id})">
-        ${item.status === 'pending' ? 'I Found This' : 'This is Mine'}
-      </button>
-    `;
-    itemsGrid.appendChild(itemCard);
-  });
-}
-
-// Search items
-function searchItems() {
-  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-  const categoryFilter = document.getElementById('categoryFilter').value;
-
-  let filteredItems = itemsData.filter(item => {
-    const matchesSearch = item.item_name.toLowerCase().includes(searchTerm) || 
-                         item.description.toLowerCase().includes(searchTerm) ||
-                         item.lost_location.toLowerCase().includes(searchTerm);
-    
-    const matchesCategory = !categoryFilter || item.category === categoryFilter;
-    
-    return matchesSearch && matchesCategory;
-  });
-
-  displayItems(filteredItems);
-}
-
-// Claim item
-function claimItem(itemId) {
-  if (!userData.isLoggedIn) {
-    window.location.href = 'loginuser.php';
-    return;
-  }
-  const item = itemsData.find(i => i.item_id === itemId);
-  if (item) {
-    alert(`Claim submitted for: ${item.item_name}\nYou will be contacted soon for verification.`);
-  }
-}
-
-// Form submissions
-document.getElementById('reportForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  if (!userData.isLoggedIn) {
-    window.location.href = 'loginuser.php';
-    return;
-  }
-  const formData = new FormData(e.target);
-  // In production, send formData to a PHP script via AJAX to insert into reported_items
-  alert('Lost item reported successfully!'); // Replace with AJAX call
-  closeModal('reportModal');
-  e.target.reset();
-  // Refresh items from database in production
-});
-
-document.getElementById('foundForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  if (!userData.isLoggedIn) {
-    window.location.href = 'loginuser.php';
-    return;
-  }
-  const formData = new FormData(e.target);
-  // In production, send formData to a PHP script via AJAX to insert into reported_items
-  alert('Found item reported successfully!'); // Replace with AJAX call
-  closeModal('foundModal');
-  e.target.reset();
-  // Refresh items from database in production
-});
-
-// Close modals when clicking outside
-window.onclick = function(event) {
-  const modals = document.getElementsByClassName('modal');
-  for (let modal of modals) {
-    if (event.target === modal) {
-      modal.style.display = 'none';
+    // Initialize page
+    function initializePage() {
+      updateUserGreeting();
+      displayItems(itemsData);
     }
-  }
-}
 
-// Initialize page when loaded
-window.onload = initializePage;
-</script>
+    // Update user greeting
+    function updateUserGreeting() {
+      const userGreeting = document.getElementById('userGreeting');
+      const personalizedWelcome = document.getElementById('personalizedWelcome');
+      
+      userGreeting.innerHTML = `<a href="profile.php">Welcome, ${userData.fullName}!</a>`;
+      if (userData.isLoggedIn) {
+        personalizedWelcome.textContent = `Welcome ${userData.fullName} to Lost & Found`;
+      }
+    }
+
+    // Trigger action based on login status
+    function triggerAction(targetId) {
+      if (!userData.isLoggedIn) {
+        window.location.href = 'loginuser.php';
+      } else if (targetId === 'searchSection') {
+        toggleSearch();
+      } else {
+        openModal(targetId);
+      }
+    }
+
+  </script>
 </body>
 </html>

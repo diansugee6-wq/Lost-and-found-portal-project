@@ -15,44 +15,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $description = $_POST['description'];
     $lost_date = $_POST['lost_date'];
     $lost_location = $_POST['lost_location'];
-    $user_id = $_SESSION['user_id'];
-    $check_user_sql = "SELECT id FROM user_details WHERE id = :user_id";
-$check_user_stmt = $db->prepare($check_user_sql);
-$check_user_stmt->bindParam(':user_id', $user_id);
-$check_user_stmt->execute();
-
-if ($check_user_stmt->rowCount() == 0) {
-    echo "<script>alert('User not found. Please login again.'); window.location.href='home.php';</script>";
-    exit();
-}
 
     // Handle image upload
     $target_dir = "uploads/";
     $target_file = $target_dir . basename($_FILES["item_image"]["name"]);
     $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
     
-// Replace the current INSERT statement (around line 26-27) with this:
-if (move_uploaded_file($_FILES["item_image"]["tmp_name"], $target_file)) {
-    $sql = "INSERT INTO reported_items (user_id, username, item_name, category, description, lost_date, lost_location, image_path) 
-    VALUES (:user_id, :username, :item_name, :category, :description, :lost_date, :lost_location, :image_path)";
-
-    $stmt = $db->prepare($sql);
-    $stmt->bindParam(':user_id', $user_id);  // Add this line
-    $stmt->bindParam(':username', $_SESSION['username']);
-    $stmt->bindParam(':item_name', $item_name);
-    $stmt->bindParam(':category', $category);
-    $stmt->bindParam(':description', $description);
-    $stmt->bindParam(':lost_date', $lost_date);
-    $stmt->bindParam(':lost_location', $lost_location);
-    $stmt->bindParam(':image_path', $target_file);
-    
-    if ($stmt->execute()) {
-        echo "<script>alert('Item reported successfully!'); window.location.href='home.php';</script>";
-    } else {
-        echo "<script>alert('Error reporting item. Please try again.');</script>";
-
+    if (move_uploaded_file($_FILES["item_image"]["tmp_name"], $target_file)) {
+        $sql = "INSERT INTO lost_items (user_id, item_name, category, description, lost_date, lost_location, image_path) 
+                VALUES (:user_id, :item_name, :category, :description, :lost_date, :lost_location, :image_path)";
+        
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':user_id', $_SESSION['user_id']);
+        $stmt->bindParam(':item_name', $item_name);
+        $stmt->bindParam(':category', $category);
+        $stmt->bindParam(':description', $description);
+        $stmt->bindParam(':lost_date', $lost_date);
+        $stmt->bindParam(':lost_location', $lost_location);
+        $stmt->bindParam(':image_path', $target_file);
+        
+        if ($stmt->execute()) {
+            echo "<script>alert('Item reported successfully!'); window.location.href='afterlogin_home.php';</script>";
+        }
     }
-}
 }
 ?>
 
