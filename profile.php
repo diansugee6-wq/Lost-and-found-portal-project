@@ -410,8 +410,32 @@ try {
                 <?php echo strtoupper($item['status']); ?>
               </div>
               <h3><?php echo htmlspecialchars($item['item_name']); ?></h3>
-              <?php if ($item['image_path']): ?>
-                <img src="<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['item_name']); ?>" style="max-width: 100%; border-radius: 5px; margin-bottom: 10px;" />
+              <?php
+                $imagePathRaw = isset($item['image_path']) ? trim((string)$item['image_path']) : '';
+                $webPath = '';
+                if ($imagePathRaw !== '') {
+                  if (preg_match('~^(?:https?:)?//|^data:~i', $imagePathRaw)) {
+                    $webPath = $imagePathRaw;
+                  } else {
+                    $basePath = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+                    if ($imagePathRaw[0] === '/') {
+                      $webPath = $basePath . $imagePathRaw;
+                    } else {
+                      $webPath = $basePath . '/' . $imagePathRaw;
+                    }
+                  }
+                }
+                $hasImage = false;
+                if ($webPath !== '' && !preg_match('~^(?:https?:)?//|^data:~i', $webPath)) {
+                  $absWeb = ($webPath[0] === '/') ? $webPath : ('/' . $webPath);
+                  $fsPath = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') . str_replace('/', DIRECTORY_SEPARATOR, $absWeb);
+                  $hasImage = file_exists($fsPath);
+                } elseif ($webPath !== '') {
+                  $hasImage = true;
+                }
+              ?>
+              <?php if ($hasImage): ?>
+                <img src="<?php echo htmlspecialchars($webPath); ?>" alt="<?php echo htmlspecialchars($item['item_name']); ?>" style="max-width: 100%; border-radius: 5px; margin-bottom: 10px;" />
               <?php endif; ?>
               <p><strong>Category:</strong> <?php echo htmlspecialchars($item['category']); ?></p>
               <p><strong>Description:</strong> <?php echo htmlspecialchars($item['description']); ?></p>

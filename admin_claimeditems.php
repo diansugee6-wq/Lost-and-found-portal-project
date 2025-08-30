@@ -118,13 +118,37 @@ $claimed = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <?php foreach ($claimed as $row): ?>
                             <tr>
                                 <td class="nowrap"><?= (int)$row['item_id'] ?></td>
-                                <td>
-                                    <?php if (!empty($row['image_path'])): ?>
-                                        <img class="thumb" src="<?= htmlspecialchars($row['image_path']) ?>" alt="Item">
-                                    <?php else: ?>
-                                        <span class="muted">No image</span>
-                                    <?php endif; ?>
-                                </td>
+                                                                <td>
+                                                                        <?php
+                                                                            $imagePathRaw = isset($row['image_path']) ? trim((string)$row['image_path']) : '';
+                                                                            $webPath = '';
+                                                                            if ($imagePathRaw !== '') {
+                                                                                if (preg_match('~^(?:https?:)?//|^data:~i', $imagePathRaw)) {
+                                                                                    $webPath = $imagePathRaw;
+                                                                                } else {
+                                                                                    $basePath = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+                                                                                    if ($imagePathRaw[0] === '/') {
+                                                                                        $webPath = $basePath . $imagePathRaw;
+                                                                                    } else {
+                                                                                        $webPath = $basePath . '/' . $imagePathRaw;
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            $hasImage = false;
+                                                                            if ($webPath !== '' && !preg_match('~^(?:https?:)?//|^data:~i', $webPath)) {
+                                                                                $absWeb = ($webPath[0] === '/') ? $webPath : ('/' . $webPath);
+                                                                                $fsPath = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') . str_replace('/', DIRECTORY_SEPARATOR, $absWeb);
+                                                                                $hasImage = file_exists($fsPath);
+                                                                            } elseif ($webPath !== '') {
+                                                                                $hasImage = true; // assume remote/data present
+                                                                            }
+                                                                        ?>
+                                                                        <?php if ($hasImage): ?>
+                                                                                <img class="thumb" src="<?= htmlspecialchars($webPath) ?>" alt="Item">
+                                                                        <?php else: ?>
+                                                                                <span class="muted">No image</span>
+                                                                        <?php endif; ?>
+                                                                </td>
                                 <td><?= htmlspecialchars($row['item_name']) ?></td>
                                 <td><?= htmlspecialchars($row['reported_by']) ?></td>
                                 <td><?= htmlspecialchars($row['claimed_by']) ?></td>
