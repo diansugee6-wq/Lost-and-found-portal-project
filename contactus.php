@@ -197,7 +197,7 @@
     <img src="contact%20us.png" alt="Cover Photo" class="cover-photo">
 </div>
     
-<p>isbhiceonsvkevrvknr</p>
+<!-- <p>isbhiceonsvkevrvknr</p> -->
 
 <footer class="advanced-footer">
     <div class="container">
