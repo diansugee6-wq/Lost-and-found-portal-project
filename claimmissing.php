@@ -552,7 +552,11 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
       <ul>
         <li><a class="active" href="home.php">Home</a></li>
         <li><a href="about.php">About Us</a></li>
-        <li><a href="javascript:void(0)" onclick="triggerAction('reportModal')">Report Items</a></li>
+        <?php if (isset($_SESSION['user_id'])): ?>
+          <li><a href="report_lost.php">Report Items</a></li>
+        <?php else: ?>
+          <li><a href="loginuser.php">Report Items</a></li>
+        <?php endif; ?>
         <li><a href="javascript:void(0)" onclick="triggerAction('searchSection')">Claim Missing</a></li>
         <li><a href="contactus.php">Contact Us</a></li>
       </ul>
@@ -808,8 +812,9 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
       } else if (targetId === 'searchSection') {
         // This page already shows the search section.
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        openModal(targetId);
+      } else if (targetId === 'reportModal') {
+        // No modal on this page; navigate to report page
+        window.location.href = 'report_lost.php';
       }
     }
 
