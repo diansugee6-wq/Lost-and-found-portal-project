@@ -18,9 +18,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($user && password_verify($password, $user['password'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
-        $_SESSION['user_role'] = $user['user_role']; // save role in session
+        // Use correct DB column name 'role'
+        $_SESSION['user_role'] = isset($user['role']) ? (int)$user['role'] : 0; // save role in session
 
-        if ($user['user_role'] == 1) {
+        if (!empty($user['role']) && (int)$user['role'] === 1) {
             // Admin redirect
             echo "<script>alert('Welcome Admin!'); window.location.href='admindashboard.php';</script>";
         } else {

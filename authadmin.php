@@ -44,9 +44,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // Verify password
         if (password_verify($password, $user['password'])) {
+            // Set both admin-specific and generic session keys used by the app
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_id'] = $user['id'];
             $_SESSION['admin_username'] = $user['username'];
+            // Generic keys expected by admin pages
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['user_role'] = 1; // role=1 -> admin
+            $_SESSION['last_activity'] = time();
             header("Location: admindashboard.php");
             exit();
         } else {

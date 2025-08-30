@@ -2,7 +2,7 @@
 session_start();
 require_once 'configure.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || (int)$_SESSION['user_role'] !== 1) {
     header("Location: loginuser.php");
     exit();
 }

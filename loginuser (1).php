@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error = "Please enter both username and password.";
     } else {
         // Check if user exists and verify password
-        $stmt = $conn->prepare("SELECT id, username, password, full_name FROM user_details WHERE username = ?");
+    $stmt = $conn->prepare("SELECT id, username, password, full_name, role FROM user_details WHERE username = ?");
         $stmt->bind_param("s", $login_username);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -46,12 +46,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['full_name'] = $user['full_name'];
                 $_SESSION['logged_in'] = true;
+                $_SESSION['user_role'] = isset($user['role']) ? (int)$user['role'] : 0;
                 
                 // Clear any previous errors
                 $error = "";
                 
-                // Redirect to logged in home page
-                header("Location: afterlogin_home.php");
+                // Redirect based on role
+                if (!empty($user['role']) && (int)$user['role'] === 1) {
+                    header("Location: admindashboard.php");
+                } else {
+                    header("Location: home.php");
+                }
                 exit();
                 
             } else {

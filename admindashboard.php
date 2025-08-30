@@ -4,7 +4,7 @@ session_start();
 
 
 // Check if admin is logged in
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || (int)$_SESSION['user_role'] !== 1) {
     // If not logged in, or not an admin
     header("Location: loginuser.php");
     exit();
@@ -38,7 +38,7 @@ $users = [];
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     $searchTerm = trim($_POST['search']);
     $sql = "SELECT * FROM user_details 
-            WHERE user_role = 0 AND (
+            WHERE role = 0 AND (
                 full_name LIKE :term OR 
                 username LIKE :term OR 
                 email LIKE :term OR 
@@ -49,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     $stmt = $conn->prepare($sql);
     $stmt->execute([':term' => "%$searchTerm%"]);
 } else {
-    $sql = "SELECT * FROM user_details WHERE user_role = 0 ORDER BY created_at DESC";
+    $sql = "SELECT * FROM user_details WHERE role = 0 ORDER BY created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->execute();
 }
