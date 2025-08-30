@@ -1,8 +1,11 @@
 <?php
 session_start();
 
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in'])) {
+// Check if admin is logged in (generic role=1 or legacy admin flag)
+if (!(
+    (isset($_SESSION['user_id']) && isset($_SESSION['user_role']) && (int)$_SESSION['user_role'] === 1)
+    || (!empty($_SESSION['admin_logged_in']))
+)) {
     header("Location: loginadmin.php");
     exit();
 }
@@ -109,6 +112,22 @@ if ($logResult && $logResult->num_rows > 0) {
     while($row = $logResult->fetch_assoc()) {
         $activityLogs[] = $row;
     }
+}
+
+// Determine admin display name/initials for header
+$adminName = 'Admin';
+$adminId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : (int)($_SESSION['admin_id'] ?? 0);
+if ($adminId > 0) {
+    $res = $conn->query("SELECT full_name, username FROM user_details WHERE id = " . $adminId . " LIMIT 1");
+    if ($res && $row = $res->fetch_assoc()) {
+        $adminName = $row['full_name'] ?: ($row['username'] ?? 'Admin');
+    }
+}
+function st_initials($name) {
+    $parts = preg_split('/\s+/', trim((string)$name));
+    $i = '';
+    foreach ($parts as $p) { if ($p !== '') { $i .= strtoupper(substr($p, 0, 1)); } }
+    return substr($i, 0, 2) ?: 'A';
 }
 
 $conn->close();
@@ -662,7 +681,7 @@ $conn->close();
 <body>
     <div class="container">
         <!-- Sidebar Navigation -->
-        <div class="navigation">
+    <div class="navigation">
             <a href="#" class="logo-link">
                 <span class="icon">
                     <img src="logo2.png" alt="Logo">
@@ -683,13 +702,13 @@ $conn->close();
                     </a>
                 </li>
                 <li>
-                    <a href="itemreports.php">
+            <a href="admin_reporteditems.php">
                         <span class="icon"><i class="fas fa-clipboard-list"></i></span>
                         <span class="title">Item Reports</span>
                     </a>
                 </li>
                 <li>
-                    <a href="itemclaims.php">
+            <a href="admin_claimeditems.php">
                         <span class="icon"><i class="fas fa-search"></i></span>
                         <span class="title">Item Claims</span>
                     </a>
@@ -701,7 +720,7 @@ $conn->close();
                     </a>
                 </li>
                 <li>
-                    <a href="home.html">
+            <a href="/Lost-and-found-portal-project/home.php">
                         <span class="icon"><i class="fas fa-home"></i></span>
                         <span class="title">Back to Home</span>
                     </a>
@@ -715,8 +734,8 @@ $conn->close();
                 <h1 class="dashboard-title">System Settings</h1>
                 <div style="display: flex; align-items: center;">
                     <div class="user-welcome">
-                        <div class="user-avatar">A</div>
-                        <div>Admin User</div>
+                        <div class="user-avatar"><?php echo htmlspecialchars(st_initials($adminName)); ?></div>
+                        <div><?php echo htmlspecialchars($adminName); ?></div>
                     </div>
                     <a href="logout.php" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout

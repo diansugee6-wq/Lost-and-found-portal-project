@@ -18,6 +18,29 @@ require_once 'configure.php';
 $database = new Database();
 $conn = $database->getConnection();
 
+// Handle CSV export for users (respects current search term if provided via GET as well)
+if (isset($_GET['export']) && $_GET['export'] === 'users') {
+    $term = isset($_GET['term']) ? trim($_GET['term']) : '';
+    if ($term !== '') {
+        $sqlExport = "SELECT id, full_name, username, email, nic, contact_number, created_at FROM user_details WHERE role = 0 AND (full_name LIKE :t OR username LIKE :t OR email LIKE :t OR nic LIKE :t OR contact_number LIKE :t) ORDER BY created_at DESC";
+        $stmtExport = $conn->prepare($sqlExport);
+        $stmtExport->execute([':t' => "%$term%"]);
+    } else {
+        $stmtExport = $conn->prepare("SELECT id, full_name, username, email, nic, contact_number, created_at FROM user_details WHERE role = 0 ORDER BY created_at DESC");
+        $stmtExport->execute();
+    }
+    $rows = $stmtExport->fetchAll(PDO::FETCH_ASSOC);
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="users_export.csv"');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['ID','Full Name','Username','Email','NIC','Contact Number','Registration Date']);
+    foreach ($rows as $r) {
+        fputcsv($out, [$r['id'],$r['full_name'],$r['username'],$r['email'],$r['nic'],$r['contact_number'],$r['created_at']]);
+    }
+    fclose($out);
+    exit;
+}
+
 // Handle user deletion
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_user'])) {
     $userId = intval($_POST['user_id']);
@@ -61,6 +84,9 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $totalUsers = 0;
 $todayUsers = 0;
 $weekUsers = 0;
+$totalReports = 0;
+$pendingReports = 0;
+$totalClaims = 0;
 
 $stmt = $conn->query("SELECT COUNT(*) as total FROM user_details");
 $totalUsers = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
@@ -70,6 +96,36 @@ $todayUsers = $stmt->fetch(PDO::FETCH_ASSOC)['today'];
 
 $stmt = $conn->query("SELECT COUNT(*) as week FROM user_details WHERE YEARWEEK(created_at) = YEARWEEK(CURDATE())");
 $weekUsers = $stmt->fetch(PDO::FETCH_ASSOC)['week'];
+
+// Reported/Claimed stats
+try {
+    $stmt = $conn->query("SELECT COUNT(*) AS c FROM reported_items");
+    $totalReports = (int)$stmt->fetch(PDO::FETCH_ASSOC)['c'];
+} catch (Exception $e) { $totalReports = 0; }
+try {
+    $stmt = $conn->query("SELECT COUNT(*) AS c FROM reported_items WHERE status = 'pending'");
+    $pendingReports = (int)$stmt->fetch(PDO::FETCH_ASSOC)['c'];
+} catch (Exception $e) { $pendingReports = 0; }
+try {
+    $stmt = $conn->query("SELECT COUNT(*) AS c FROM claimed_items");
+    $totalClaims = (int)$stmt->fetch(PDO::FETCH_ASSOC)['c'];
+} catch (Exception $e) { $totalClaims = 0; }
+
+// Admin display name/initials
+$adminDisplay = 'Admin';
+try {
+    $stmt = $conn->prepare("SELECT full_name, username FROM user_details WHERE id = :id LIMIT 1");
+    $stmt->execute([':id' => $_SESSION['user_id']]);
+    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $adminDisplay = $row['full_name'] ?: ($row['username'] ?? 'Admin');
+    }
+} catch (Exception $e) { /* ignore */ }
+function initials($name) {
+    $parts = preg_split('/\s+/', trim((string)$name));
+    $i = '';
+    foreach ($parts as $p) { if ($p !== '') { $i .= mb_strtoupper(mb_substr($p, 0, 1)); } }
+    return mb_substr($i, 0, 2) ?: 'A';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -262,7 +318,7 @@ $weekUsers = $stmt->fetch(PDO::FETCH_ASSOC)['week'];
         }
 
         .stat-card {
-            background: var(--white);
+            background: linear-gradient(180deg, #fff, #f8f8f8);
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
@@ -328,6 +384,11 @@ $weekUsers = $stmt->fetch(PDO::FETCH_ASSOC)['week'];
             align-items: center;
             gap: 8px;
         }
+
+        .quick-actions { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 16px; margin-bottom: 30px; }
+        .qa-card { background:#ffffff; border:1px solid #eee; border-radius:10px; padding:16px; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);} 
+        .qa-card .qa-icon { font-size:22px; width:40px; height:40px; border-radius:50%; background:#fff2cc; display:flex; align-items:center; justify-content:center; }
+        .qa-card a { text-decoration:none; color:#222; font-weight:600; }
 
         .user-table {
             width: 100%;
@@ -480,31 +541,47 @@ $weekUsers = $stmt->fetch(PDO::FETCH_ASSOC)['week'];
                 <span class="logo-text">Lost & Found Admin</span>
             </a>
             <ul>
-                <li><a href="admindashboard.php" class="active"><span class="icon"><i class="fas fa-chart-line"></i></span>
-               
-                <!--<span class="title">Dashboard</span></a></li>
-                <li><a href="usermanagement.php"><span class="icon"><i class="fas fa-users"></i></span>-->
-                
-                <span class="title">User Management</span></a></li>
-                <li><a href="admin_reporteditems.php"><span class="icon"><i class="fas fa-clipboard-list"></i></span>
-                
-                <span class="title">Item Reports</span></a></li>
-                <li><a href="admin_claimeditems.php"><span class="icon"><i class="fas fa-search"></i></span><span class="title">Item Claims</span></a></li>
-
-                <!--<li><a href="settings.php"><span class="icon"><i class="fas fa-cog"></i></span><span class="title">Settings</span></a></li>-->
-
-                <li><a href="home.php"><span class="icon"><i class="fas fa-home"></i></span><span class="title">Back to Home</span></a></li>
+                <li>
+                    <a href="admindashboard.php" class="active">
+                        <span class="icon"><i class="fas fa-chart-line"></i></span>
+                        <span class="title">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="usermanagement.php">
+                        <span class="icon"><i class="fas fa-users"></i></span>
+                        <span class="title">User Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_reporteditems.php">
+                        <span class="icon"><i class="fas fa-clipboard-list"></i></span>
+                        <span class="title">Item Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_claimeditems.php">
+                        <span class="icon"><i class="fas fa-search"></i></span>
+                        <span class="title">Item Claims</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/Lost-and-found-portal-project/home.php">
+                        <span class="icon"><i class="fas fa-home"></i></span>
+                        <span class="title">Back to Home</span>
+                    </a>
+                </li>
             </ul>
         </div>
 
         <!-- Main Content -->
         <div class="main-content">
             <div class="dashboard-header">
-                <h1 class="dashboard-title">Admin Dashboard</h1>
+        <h1 class="dashboard-title">Admin Dashboard</h1>
                 <div style="display: flex; align-items: center;">
                     <div class="user-welcome">
-                        <div class="user-avatar">A</div>
-                        <div>Admin User</div>
+            <div class="user-avatar"><?php echo htmlspecialchars(initials($adminDisplay)); ?></div>
+            <div><?php echo htmlspecialchars($adminDisplay); ?></div>
                     </div>
                     <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
@@ -537,15 +614,35 @@ $weekUsers = $stmt->fetch(PDO::FETCH_ASSOC)['week'];
                     <div class="stat-number"><?php echo $todayUsers; ?></div><div class="stat-label">New Today</div></div>
                 <div class="stat-card"><div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
                     <div class="stat-number"><?php echo $weekUsers; ?></div><div class="stat-label">New This Week</div></div>
-                <div class="stat-card"><div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
-                    <div class="stat-number"><?php echo $totalUsers > 0 ? '100%' : '0%'; ?></div><div class="stat-label">Active Users</div></div>
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+                    <div class="stat-number"><?php echo $totalReports; ?></div><div class="stat-label">Total Reports</div></div>
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="stat-number"><?php echo $pendingReports; ?></div><div class="stat-label">Pending Reports</div></div>
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-circle-check"></i></div>
+                    <div class="stat-number"><?php echo $totalClaims; ?></div><div class="stat-label">Claims</div></div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="quick-actions">
+                <div class="qa-card">
+                    <div class="qa-icon"><i class="fas fa-users"></i></div>
+                    <a href="usermanagement.php">Manage Users</a>
+                </div>
+                <div class="qa-card">
+                    <div class="qa-icon"><i class="fas fa-clipboard-list"></i></div>
+                    <a href="admin_reporteditems.php">Review Reports</a>
+                </div>
+                <div class="qa-card">
+                    <div class="qa-icon"><i class="fas fa-search"></i></div>
+                    <a href="admin_claimeditems.php">Review Claims</a>
+                </div>
             </div>
 
             <!-- User Table -->
             <div class="table-container">
                 <div class="table-header">
                     <div class="table-title">Registered Users</div>
-                    <button class="export-btn"><i class="fas fa-download"></i> Export Data</button>
+                    <a class="export-btn" href="admindashboard.php?export=users<?php echo $searchTerm ? ('&term=' . urlencode($searchTerm)) : '' ;?>"><i class="fas fa-download"></i> Export CSV</a>
                 </div>
                 <table class="user-table">
                     <thead>
@@ -566,9 +663,9 @@ $weekUsers = $stmt->fetch(PDO::FETCH_ASSOC)['week'];
                                     <td><?php echo htmlspecialchars($user['contact_number']); ?></td>
                                     <td><?php echo date('Y-m-d', strtotime($user['created_at'])); ?></td>
                                     <td>
-                                        <button class="action-btn view-btn" data-userid="<?php echo $user['id']; ?>">
+                                        <a class="action-btn view-btn" href="user_details.php?id=<?php echo (int)$user['id']; ?>">
                                             <i class="fas fa-eye"></i> View
-                                        </button>
+                                        </a>
                                         <form method="POST" action="" style="display:inline;">
                                             <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
                                             <button type="submit" name="delete_user" class="action-btn delete-btn" 

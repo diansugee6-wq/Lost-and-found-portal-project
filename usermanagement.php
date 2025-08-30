@@ -1,8 +1,11 @@
 <?php
 session_start();
 
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in'])) {
+// Check if admin is logged in (accept either generic role=1 session or legacy admin flag)
+if (!(
+    (isset($_SESSION['user_id']) && isset($_SESSION['user_role']) && (int)$_SESSION['user_role'] === 1)
+    || (!empty($_SESSION['admin_logged_in']))
+)) {
     header("Location: loginadmin.php");
     exit();
 }
@@ -96,6 +99,22 @@ $sql = "SELECT COUNT(*) as inactive FROM user_details WHERE status = 'inactive'"
 $result = $conn->query($sql);
 if ($result) {
     $inactiveUsers = $result->fetch_assoc()['inactive'];
+}
+
+// Determine admin display name/initials for header
+$adminName = 'Admin';
+$adminId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : (int)($_SESSION['admin_id'] ?? 0);
+if ($adminId > 0) {
+    $res = $conn->query("SELECT full_name, username FROM user_details WHERE id = " . $adminId . " LIMIT 1");
+    if ($res && $row = $res->fetch_assoc()) {
+        $adminName = $row['full_name'] ?: ($row['username'] ?? 'Admin');
+    }
+}
+function um_initials($name) {
+    $parts = preg_split('/\s+/', trim((string)$name));
+    $i = '';
+    foreach ($parts as $p) { if ($p !== '') { $i .= strtoupper(substr($p, 0, 1)); } }
+    return substr($i, 0, 2) ?: 'A';
 }
 
 $conn->close();
@@ -557,7 +576,7 @@ $conn->close();
 <body>
     <div class="container">
         <!-- Sidebar Navigation -->
-        <div class="navigation">
+    <div class="navigation">
             <a href="#" class="logo-link">
                 <span class="icon">
                     <img src="logo2.png" alt="Logo">
@@ -566,37 +585,37 @@ $conn->close();
             </a>
             <ul>
                 <li>
-                    <a href="admindashboard.php">
+            <a href="admindashboard.php">
                         <span class="icon"><i class="fas fa-chart-line"></i></span>
                         <span class="title">Dashboard</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="active">
+            <a href="usermanagement.php" class="active">
                         <span class="icon"><i class="fas fa-users"></i></span>
                         <span class="title">User Management</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+            <a href="admin_reporteditems.php">
                         <span class="icon"><i class="fas fa-clipboard-list"></i></span>
                         <span class="title">Item Reports</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+            <a href="admin_claimeditems.php">
                         <span class="icon"><i class="fas fa-search"></i></span>
                         <span class="title">Item Claims</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+            <a href="settings.php">
                         <span class="icon"><i class="fas fa-cog"></i></span>
                         <span class="title">Settings</span>
                     </a>
                 </li>
                 <li>
-                    <a href="home.html">
+            <a href="/Lost-and-found-portal-project/home.php">
                         <span class="icon"><i class="fas fa-home"></i></span>
                         <span class="title">Back to Home</span>
                     </a>
@@ -610,8 +629,8 @@ $conn->close();
                 <h1 class="dashboard-title">User Management</h1>
                 <div style="display: flex; align-items: center;">
                     <div class="user-welcome">
-                        <div class="user-avatar">A</div>
-                        <div>Admin User</div>
+                        <div class="user-avatar"><?php echo htmlspecialchars(um_initials($adminName)); ?></div>
+                        <div><?php echo htmlspecialchars($adminName); ?></div>
                     </div>
                     <a href="logout.php" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout

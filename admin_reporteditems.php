@@ -82,7 +82,7 @@ $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <li><a href="admindashboard.php"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="title">Dashboard</span></a></li>
                 <li><a href="admin_reporteditems.php" class="active"><span class="icon"><i class="fas fa-clipboard-list"></i></span><span class="title">Item Reports</span></a></li>
                 <li><a href="admin_claimeditems.php"><span class="icon"><i class="fas fa-check-circle"></i></span><span class="title">Item Claims</span></a></li>
-                <li><a href="home.php"><span class="icon"><i class="fas fa-home"></i></span><span class="title">Back to Home</span></a></li>
+                <li><a href="/Lost-and-found-portal-project/home.php"><span class="icon"><i class="fas fa-home"></i></span><span class="title">Back to Home</span></a></li>
             </ul>
         </div>
 
