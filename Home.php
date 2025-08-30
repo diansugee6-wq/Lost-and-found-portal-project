@@ -11,14 +11,22 @@ require_once 'configure.php'; // Assumes this connects to the database
 // Default guest name
 $fullName = "Guest";
 
-if (isset($_SESSION['user_id'])) {
+// Treat admin sessions as logged-in too
+$effectiveUserId = null;
+if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] > 0) {
+  $effectiveUserId = (int)$_SESSION['user_id'];
+} elseif (!empty($_SESSION['admin_logged_in']) && !empty($_SESSION['admin_id'])) {
+  $effectiveUserId = (int)$_SESSION['admin_id'];
+}
+
+if (!is_null($effectiveUserId)) {
     try {
         $database = new Database();
         $conn = $database->getConnection();
 
         // Fetch user full name
-        $stmt = $conn->prepare("SELECT full_name FROM user_details WHERE id = :user_id");
-        $stmt->bindParam(':user_id', $_SESSION['user_id'], PDO::PARAM_INT);
+  $stmt = $conn->prepare("SELECT full_name FROM user_details WHERE id = :user_id");
+  $stmt->bindParam(':user_id', $effectiveUserId, PDO::PARAM_INT);
         $stmt->execute();
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 

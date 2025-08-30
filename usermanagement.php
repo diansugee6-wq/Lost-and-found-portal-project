@@ -425,6 +425,22 @@ $conn->close();
             border-bottom: 1px solid #eee;
         }
 
+        /* Ensure action buttons line up nicely with spacing */
+        .user-table td.actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .user-table td.actions form {
+            display: inline;
+            margin: 0;
+        }
+        .user-table td.actions .action-btn {
+            margin: 0; /* gap handles spacing */
+            display: inline-flex;
+        }
+
         .user-table tr:hover {
             background-color: #f9f9f9;
         }
@@ -604,7 +620,7 @@ $conn->close();
                 </li>
                 <li>
             <a href="admin_claimeditems.php">
-                        <span class="icon"><i class="fas fa-search"></i></span>
+                        <span class="icon"><i class="fas fa-check-circle"></i></span>
                         <span class="title">Item Claims</span>
                     </a>
                 </li>
@@ -727,7 +743,7 @@ $conn->close();
                                         </span>
                                     </td>
                                     <td><?php echo date('Y-m-d', strtotime($user['created_at'])); ?></td>
-                                    <td>
+                                    <td class="actions">
                                         <button class="action-btn btn-edit">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>

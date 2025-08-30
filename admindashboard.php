@@ -375,15 +375,22 @@ function initials($name) {
 
         .export-btn {
             background: var(--yellow);
-            border: none;
+            border: 1px solid #f3c86a;
             padding: 10px 18px;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: 500;
-            display: flex;
+            font-weight: 600;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
+            color: #111;
+            text-decoration: none;
+            box-shadow: 0 3px 8px rgba(251, 177, 23, 0.25);
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
         }
+        .export-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(251, 177, 23, 0.35); filter: brightness(0.98); }
+        .export-btn:active { transform: translateY(0); }
+        .export-btn:focus-visible { outline: 3px solid rgba(251,177,23,.35); outline-offset: 2px; }
 
         .quick-actions { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 16px; margin-bottom: 30px; }
         .qa-card { background:#ffffff; border:1px solid #eee; border-radius:10px; padding:16px; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);} 
@@ -416,31 +423,32 @@ function initials($name) {
 
         .action-btn {
             background: var(--yellow);
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
+            border: 1px solid #f3c86a;
+            padding: 10px 16px;
+            border-radius: 10px;
             cursor: pointer;
             margin-right: 8px;
             font-size: 14px;
-            transition: all 0.2s;
+            font-weight: 600;
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            color: #111;
+            text-decoration: none;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.06);
         }
 
-        .action-btn:hover {
-            background: #f9a602;
-            transform: translateY(-2px);
-        }
+        .action-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,0.1); filter: brightness(0.98); }
+        .action-btn:active { transform: translateY(0); }
+        .action-btn:focus-visible { outline: 3px solid rgba(251,177,23,.35); outline-offset: 2px; }
 
-        .delete-btn {
-            background: #ff4d4d;
-            color: white;
-        }
+        .btn-soft { background: #fff7df; border-color: #f3c86a; color: #222; }
+        .btn-soft:hover { background: #ffefbd; }
 
-        .delete-btn:hover {
-            background: #ff3333;
-        }
+    .delete-btn { background: #ff4d4d; color: #fff; border-color: #ff6b6b; box-shadow: 0 3px 8px rgba(255,77,77,0.25); }
+    .delete-btn:hover { background: #ff3333; box-shadow: 0 6px 14px rgba(255,77,77,0.35); }
+    .delete-btn:focus-visible { outline: 3px solid rgba(255,77,77,.35); outline-offset: 2px; }
 
         /* Message alerts */
         .alert {
@@ -561,8 +569,14 @@ function initials($name) {
                 </li>
                 <li>
                     <a href="admin_claimeditems.php">
-                        <span class="icon"><i class="fas fa-search"></i></span>
+                        <span class="icon"><i class="fas fa-check-circle"></i></span>
                         <span class="title">Item Claims</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="settings.php">
+                        <span class="icon"><i class="fas fa-cog"></i></span>
+                        <span class="title">Settings</span>
                     </a>
                 </li>
                 <li>
@@ -663,7 +677,7 @@ function initials($name) {
                                     <td><?php echo htmlspecialchars($user['contact_number']); ?></td>
                                     <td><?php echo date('Y-m-d', strtotime($user['created_at'])); ?></td>
                                     <td>
-                                        <a class="action-btn view-btn" href="user_details.php?id=<?php echo (int)$user['id']; ?>">
+                                        <a class="action-btn btn-soft view-btn" href="user_details.php?id=<?php echo (int)$user['id']; ?>">
                                             <i class="fas fa-eye"></i> View
                                         </a>
                                         <form method="POST" action="" style="display:inline;">
