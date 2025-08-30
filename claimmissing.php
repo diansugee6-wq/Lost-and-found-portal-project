@@ -369,6 +369,11 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
       border: 2px solid var(--yellow);
     }
 
+  /* Icon utilities */
+  .icon { width: 1em; height: 1em; fill: currentColor; vertical-align: -0.125em; }
+  .icon-lg { width: 1.4em; height: 1.4em; margin-right: 8px; }
+  .btn .icon { margin-right: 8px; }
+
     .results-bar {
       display: flex;
       justify-content: space-between;
@@ -583,7 +588,13 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
       <div class="content-wrapper">
       <div class="container">
         <div class="header">
-            <h1>🔍 Claim Missing Items</h1>
+            <h1>
+              <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"></circle>
+                <line x1="16.5" y1="16.5" x2="22" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+              </svg>
+              Claim Missing Items
+            </h1>
             <p>Browse through reported lost items and help reunite them with their owners</p>
         </div>
         
@@ -631,7 +642,13 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
           </select>
         </div>
         <div class="form-group actions">
-          <button type="submit" class="btn">🔍 Search</button>
+          <button type="submit" class="btn">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"></circle>
+              <line x1="16.5" y1="16.5" x2="22" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+            </svg>
+            Search
+          </button>
           <a href="claimmissing.php" class="btn btn-clear">Clear</a>
         </div>
             </form>
@@ -741,7 +758,12 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         <?php else: ?>
             <div class="no-items">
-                <div style="font-size:4em; margin-bottom:20px;">📭</div>
+                <div style="margin-bottom:20px;">
+                  <svg class="icon" style="width:64px;height:64px;color:#bbb;" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  </svg>
+                </div>
                 <h3>No items found</h3>
                 <p>There are currently no reported items matching your search criteria.</p>
                 <?php if (!empty($search_query) || !empty($category_filter) || !empty($status_filter)): ?>
