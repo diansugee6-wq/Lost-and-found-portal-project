@@ -128,120 +128,24 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
             line-height: 1.6;
         }
 
-        nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: absolute;
-      top: 0;
-      width: 100%;
-      padding: 10px 20px;
-      z-index: 1000;
+    /* Navbar (shared) */
+    nav {
+      display:flex; align-items:center; justify-content:space-between;
+      position:absolute; top:0; left:0; width:100%; padding:10px 20px; z-index:1000;
+      background:#fff; border-bottom:1px solid #eee; box-shadow:0 2px 8px rgba(0,0,0,0.06);
     }
+    nav a img { height:50px; }
+    nav ul { list-style:none; display:flex; gap:24px; margin:0; padding:0; }
+    nav li a { display:block; color:#111; text-decoration:none; padding:10px 12px; border-radius:6px; }
+    nav li a:hover { background:rgba(0,0,0,0.05); }
+    nav li a.active { font-weight:700; box-shadow: inset 0 -3px 0 var(--yellow); }
+    .nav-left { display:flex; align-items:center; gap:12px; }
+    .nav-right { display:flex; align-items:center; gap:16px; margin-right:20px; }
+    .nav-right li a { border:none; padding:8px 10px; }
+    .user-greeting a { color:inherit; text-decoration:none; }
+    .user-greeting a:hover { text-decoration:underline; }
 
-    nav a img {
-      height: 50px;
-    }
-
-    nav ul {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-    }
-
-    nav li {
-      margin-left: 20px;
-    }
-
-    nav li a {
-      display: block;
-      color: black;
-      text-align: center;
-      padding: 10px 14px;
-      text-decoration: none;
-      transition: background-color 0.3s ease;
-    }
-
-    nav li a:hover {
-      background-color: #ffffff33;
-      border-radius: 4px;
-    }
-
-    nav li a.active {
-      background-color: white;
-      color: black;
-      border-radius: 4px;
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      margin-right: 100px;
-    }
-
-    .nav-right li {
-      margin-left: 20px;
-    }
-
-    .nav-right li a {
-      border: 1px solid black;
-      padding: 8px 16px;
-      border-radius: 4px;
-    }
-
-    .nav-right li a:hover {
-      background-color: white;
-    }
-
-    .user-greeting a {
-      pointer-events: auto !important;
-      cursor: pointer !important;
-      position: relative;
-      z-index: 1000;
-      text-decoration: none;
-      color: inherit;
-      transition: opacity 0.3s ease, transform 0.2s ease;
-    }
-
-    .user-greeting a:hover {
-      opacity: 0.8;
-      transform: scale(1.02);
-      text-decoration: underline;
-    }
-
-    .user-greeting a:active {
-      transform: scale(0.98);
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      background-color: #ffffff33;
-      min-width: 160px;
-      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-    }
-
-    .dropdown-content a {
-      color: black;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-    }
-
-    .dropdown-content a:hover {
-      background-color: #f1f1f1;
-    }
-
-    .dropdown:hover .dropdown-content {
-      display: block;
-    }
+  /* (Removed dropdown styles to match simplified navbar) */
 
     .cover-photo {
       width: 100vw;
@@ -422,7 +326,7 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
             border-bottom: 1px solid #e1e1e1;
         }
         
-        .item-content {
+  .item-content {
             padding: 20px;
         }
         
@@ -471,13 +375,7 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
             color: #777;
         }
         
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
+  .status-badge { display:inline-block; padding:4px 10px; border-radius:16px; font-size:0.75em; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
         
         .status-pending {
             background: #fff3cd;
@@ -550,14 +448,14 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="nav-left">
       <a href="home.php"><img src="logo2.png" alt="Company logo" /></a>
       <ul>
-        <li><a class="active" href="home.php">Home</a></li>
+        <li><a href="home.php">Home</a></li>
         <li><a href="about.php">About Us</a></li>
         <?php if (isset($_SESSION['user_id'])): ?>
           <li><a href="report_lost.php">Report Items</a></li>
         <?php else: ?>
           <li><a href="loginuser.php">Report Items</a></li>
         <?php endif; ?>
-        <li><a href="javascript:void(0)" onclick="triggerAction('searchSection')">Claim Missing</a></li>
+        <li><a class="active" href="claimmissing.php">Claim Missing</a></li>
         <li><a href="contactus.php">Contact Us</a></li>
       </ul>
     </div>
@@ -570,20 +468,8 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
           <li><a href="profile.php">My Profile</a></li>
           <li><a href="logout.php">Logout</a></li>
         <?php else: ?>
-          <li class="dropdown">
-            <a href="javascript:void(0)">Login</a>
-            <div class="dropdown-content">
-              <a href="loginuser.php">User</a>
-              <a href="loginadmin.php">Admin</a>
-            </div>
-          </li>
-          <li class="dropdown">
-            <a href="javascript:void(0)">Sign Up</a>
-            <div class="dropdown-content">
-              <a href="signupuser.php">User</a>
-              <a href="signupadmin.php">Admin</a>
-            </div>
-          </li>
+          <li><a href="loginuser.php">Login</a></li>
+          <li><a href="signupuser.php">Sign Up</a></li>
         <?php endif; ?>
       </ul>
     </div>
@@ -601,6 +487,12 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
             </h1>
             <p>Browse through reported lost items and help reunite them with their owners</p>
         </div>
+
+        <?php if (!empty($_GET['reported'])): ?>
+          <div style="background:#e8f5e9;border:1px solid #c8e6c9;color:#1b5e20;padding:12px 14px;border-radius:6px;margin-bottom:16px;">
+            Item reported successfully. It may take a moment to appear in the list.
+          </div>
+        <?php endif; ?>
         
         <div class="search-filter-section">
       <form method="GET" class="filter-form" id="filtersForm">
@@ -681,7 +573,7 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
         
         <?php if (count($result) > 0): ?>
             <div class="items-grid">
-        <?php foreach($result as $row): ?>
+  <?php foreach($result as $row): ?>
           <div class="item-card">
             <?php
               $imagePathRaw = isset($row['image_path']) ? trim((string)$row['image_path']) : '';
@@ -721,40 +613,28 @@ $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endif; ?>
                         
                         <div class="item-content">
-                            <div class="item-name"><?php echo htmlspecialchars($row['item_name']); ?></div>
-                            
-                            <?php if (!empty($row['category'])): ?>
-                                <span class="item-category"><?php echo htmlspecialchars($row['category']); ?></span>
-                            <?php endif; ?>
-                            
-                            <div class="item-description">
-                                <?php echo nl2br(htmlspecialchars(substr($row['description'], 0, 150))); ?>
-                                <?php if (strlen($row['description']) > 150) echo '...'; ?>
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
+                              <div class="item-name"><?php echo htmlspecialchars($row['item_name']); ?></div>
+                              <?php $st = isset($row['status']) ? strtolower($row['status']) : 'pending';
+                                $cls = 'status-pending';
+                                if ($st==='found') $cls='status-found'; elseif ($st==='claimed') $cls='status-claimed';
+                              ?>
+                              <span class="status-badge <?php echo $cls; ?>"><?php echo htmlspecialchars($st); ?></span>
                             </div>
-                            
+                            <?php if (!empty($row['category'])): ?>
+                              <span class="item-category"><?php echo htmlspecialchars($row['category']); ?></span>
+                            <?php endif; ?>
+                            <div class="item-description">
+                              <?php echo nl2br(htmlspecialchars(substr((string)$row['description'], 0, 150))); ?><?php if (strlen((string)$row['description']) > 150) echo '...'; ?>
+                            </div>
                             <div class="item-details">
-                                <div class="detail-row">
-                                    <span class="detail-label">Lost Date:</span>
-                                    <span class="detail-value"><?php echo date('M d, Y', strtotime($row['lost_date'])); ?></span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label">Location:</span>
-                                    <span class="detail-value"><?php echo htmlspecialchars($row['lost_location']); ?></span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label">Reported:</span>
-                                    <span class="detail-value"><?php echo date('M d, Y g:i A', strtotime($row['reported_at'])); ?></span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label">Reported by:</span>
-                                    <span class="detail-value"><?php echo htmlspecialchars($row['username']); ?></span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label">Contact Number:</span>
-                                    <span class="detail-value">
-                                        <?php echo !empty($row['contact_number']) ? htmlspecialchars($row['contact_number']) : 'Not available'; ?>
-                                    </span>
-                                </div>
+                              <div class="detail-row"><span class="detail-label">Lost Date:</span><span class="detail-value"><?php echo $row['lost_date'] ? date('M d, Y', strtotime($row['lost_date'])) : '—'; ?></span></div>
+                              <div class="detail-row"><span class="detail-label">Location:</span><span class="detail-value"><?php echo htmlspecialchars((string)$row['lost_location']); ?></span></div>
+                              <div class="detail-row"><span class="detail-label">Reported:</span><span class="detail-value"><?php echo $row['reported_at'] ? date('M d, Y g:i A', strtotime($row['reported_at'])) : '—'; ?></span></div>
+                              <div class="detail-row"><span class="detail-label">Reported by:</span><span class="detail-value"><?php echo htmlspecialchars((string)$row['username']); ?></span></div>
+                            </div>
+                            <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+                              <a href="<?php echo isset($_SESSION['user_id']) ? 'report_lost.php' : 'loginuser.php'; ?>" class="btn" style="padding:10px 14px; font-size:13px;">Report similar</a>
                             </div>
                         </div>
                     </div>
